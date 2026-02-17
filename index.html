@@ -154,6 +154,13 @@
                     aria-selected="false"><h6>Contributors</h6></button>
             </li>
         </ul>
+        <div id="username_box" style="margin-bottom:12px;"></div>
+        <div style="margin-top:8px;margin-bottom:8px;">
+            <label for="iconic_filter">Filter by iconic taxon: </label>
+            <select id="iconic_filter">
+                <option value="">All</option>
+            </select>
+        </div>
         <div class="tab-content" id="species_list2">
             <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
                 <p>Species (and number of records) which have <b>not</b> been within <span class="i_rad_info">1</span>km of where you are, but have been recorded within
@@ -215,6 +222,46 @@
         // Setting up the page
         // get url parameters
         var urlParams = window.location.search;
+        var inat_username_url = new URLSearchParams(window.location.search).get('inat_username');
+        if (inat_username_url) {
+            console.log("iNaturalist username provided: " + inat_username_url);
+        }
+        
+        // Populate username box
+        var usernameBox = document.getElementById('username_box');
+        if (inat_username_url) {
+            // Show info box with username and icon legend
+            usernameBox.innerHTML = `
+                <div class="alert alert-info" role="alert">
+                    <strong><i class="bi bi-person-circle"></i> Showing observations for: ${inat_username_url}</strong>
+                    <div style="margin-top:8px;">
+                        <span style="margin-right:16px;"><i class="bi bi-check-circle-fill text-success"></i> Observed locally</span>
+                        <span style="margin-right:16px;"><i class="bi bi-check-circle text-success"></i> Observed globally</span>
+                        <span><i class="bi bi-x-circle text-muted"></i> Not observed</span>
+                    </div>
+                </div>
+            `;
+        } else {
+            // Show input box for username
+            usernameBox.innerHTML = `
+                <div class="alert alert-secondary" role="alert">
+                    <strong><i class="bi bi-person-plus"></i> Track your observations</strong>
+                    <div class="input-group" style="margin-top:8px;max-width:400px;">
+                        <input type="text" id="username_input" class="form-control" placeholder="Enter iNaturalist username" aria-label="iNaturalist username" onkeypress="if(event.key==='Enter') addUsername()">
+                        <button class="btn btn-primary" type="button" onclick="addUsername()">Go</button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function addUsername() {
+            var username = document.getElementById('username_input').value.trim();
+            if (username) {
+                var currentUrl = new URL(window.location.href);
+                currentUrl.searchParams.set('inat_username', username);
+                window.location.href = currentUrl.toString();
+            }
+        }
         if (urlParams.includes("?")) {
             console.log(urlParams);
             var getQuery = urlParams.split('?')[1];
@@ -448,6 +495,13 @@
                 // initialise create an array of species in the area
                 species_local_array = [];
                 species_id_local_array = [];
+                let userObservedTaxa = new Set();
+                let userObservedLocalTaxa = new Set();
+                let userCheckComplete = !inat_username_url;
+                // containers for rendering and filtering by iconic taxon
+                let recordedItems = [];
+                let missingItems = [];
+                let iconicSet = new Set();
 
                 // how many pages of results do I have to go through?
                 let max_page = Math.floor(species_count_local.total_results / 500) + 1
@@ -465,17 +519,32 @@
 
                         var record_plurality = "record";
                         if (specie.count > 1) {
-                            //console.log("Yes");
                             var record_plurality = "records";
                         }
+
+                        var thumb = "";
+                        if (specie.taxon && specie.taxon.default_photo && specie.taxon.default_photo.square_url) {
+                            thumb = "<img src='" + specie.taxon.default_photo.square_url + "' style='width:36px;height:36px;margin-right:8px;vertical-align:middle;border-radius:4px;'>";
+                        }
+
+                        var iconic = (specie.taxon && specie.taxon.iconic_taxon_name) ? specie.taxon.iconic_taxon_name : "";
+                        if (iconic) iconicSet.add(iconic);
+
+                        let userTickPlaceholder = "";
+                        if (inat_username_url) {
+                            userTickPlaceholder = "<span class='user-observed' data-taxon-id='" + specie.taxon.id + "' style='margin-right:6px;'><span class='spinner-border spinner-border-sm text-secondary' style='border-width:0.12em;' role='status' aria-hidden='true'></span></span>";
+                        }
+
                         let htmlSegment = '<div class="card"><div class="card-body">' +
-                            "<em><a target='_blank' href='https://www.inaturalist.org/taxa/" + specie.taxon.id + "'>" + specie.taxon.name + "</a></em>, " + specie.taxon.preferred_common_name + " - <a target='_blank' href=https://www.inaturalist.org/observations?place_id=any&subview=map&lat=" +
+                            userTickPlaceholder +
+                            thumb +
+                            "<em><a target='_blank' href='https://www.inaturalist.org/taxa/" + specie.taxon.id + "'>" + specie.taxon.name + "</a></em>, " + specie.taxon.preferred_common_name + (iconic ? " <small>(" + iconic + ")</small>" : "") + " - <a target='_blank' href=https://www.inaturalist.org/observations?place_id=any&subview=map&lat=" +
                             +lat + '&lng=' + lng + '&radius=' + o_rad + '&taxon_id=' + specie.taxon.id +
                             ">" +
                             specie.count + " " + record_plurality + "</a>" +
                             '</div></div>';
 
-                        html_recorded += htmlSegment;
+                        recordedItems.push({html: htmlSegment, iconic: iconic, taxon_id: specie.taxon.id});
                     });
 
                     let container = document.querySelector('.species_list_recorded');
@@ -484,6 +553,7 @@
                     console.log();
 
                 }
+
                 bar.style.width = "60%";
                 bar.innerHTML = "Generating missing species list";
                 //console.log(species_local_array);
@@ -493,7 +563,7 @@
                 console.log(species);
 
                 let html_missing = '';
-                let html_missing_clipboard = '';              
+                let html_missing_clipboard = '';
                 
                 species.results.forEach(specie => {
                     if (!(species_local_array.includes(specie.taxon.name))) {
@@ -502,35 +572,176 @@
                             var record_plurality = "records";
                         }
 
+                        var thumb = "";
+                        if (specie.taxon && specie.taxon.default_photo && specie.taxon.default_photo.square_url) {
+                            thumb = "<img src='" + specie.taxon.default_photo.square_url + "' style='width:36px;height:36px;margin-right:8px;vertical-align:middle;border-radius:4px;'>";
+                        }
+
+                        var iconic = (specie.taxon && specie.taxon.iconic_taxon_name) ? specie.taxon.iconic_taxon_name : "";
+                        if (iconic) iconicSet.add(iconic);
+
+                        let userTickPlaceholder = "";
+                        if (inat_username_url) {
+                            userTickPlaceholder = "<span class='user-observed' data-taxon-id='" + specie.taxon.id + "' style='margin-right:6px;'><span class='spinner-border spinner-border-sm text-secondary' style='border-width:0.12em;' role='status' aria-hidden='true'></span></span>";
+                        }
+
                         let htmlSegment = '<div class="card"><div class="card-body">' +
-                            "<em><a target='_blank' href='https://www.inaturalist.org/taxa/" + specie.taxon.id + "'>" + specie.taxon.name + "</a></em>, " + specie.taxon.preferred_common_name + " - <a target='_blank' href=https://www.inaturalist.org/observations?place_id=any&subview=map&lat=" +
+                            userTickPlaceholder +
+                            thumb +
+                            "<em><a target='_blank' href='https://www.inaturalist.org/taxa/" + specie.taxon.id + "'>" + specie.taxon.name + "</a></em>, " + specie.taxon.preferred_common_name + (iconic ? " <small>(" + iconic + ")</small>" : "") + " - <a target='_blank' href=https://www.inaturalist.org/observations?place_id=any&subview=map&lat=" +
                             +lat + '&lng=' + lng + '&radius=' + o_rad + '&taxon_id=' + specie.taxon.id +
                             ">" +
                             specie.count + " " + record_plurality + "</a>" +
                             '</div></div>';
 
-                        html_missing += htmlSegment;
+                        missingItems.push({html: htmlSegment, iconic: iconic, taxon_id: specie.taxon.id});
 
                         let clipboard_segment = specie.taxon.name + "\t" + specie.taxon.preferred_common_name + "\r\n";
                         html_missing_clipboard += clipboard_segment;
                     }
                 });
 
-                let container = document.querySelector('.species_list');
-                let container2 = document.querySelector('.clip_board');
-                container.innerHTML = html_missing;
-                container2.innerHTML = html_missing_clipboard;
+                // populate the iconic filter dropdown
+                let iconicSelect = document.getElementById('iconic_filter');
+                // remove existing non-default options
+                for (let i = iconicSelect.options.length - 1; i >= 1; i--) iconicSelect.remove(i);
+                Array.from(iconicSet).sort().forEach(ic => {
+                    let opt = document.createElement('option');
+                    opt.value = ic;
+                    opt.text = ic;
+                    iconicSelect.appendChild(opt);
+                });
+
+                // helper to render lists filtered by iconic taxon
+                function renderFilteredLists() {
+                    const filter = document.getElementById('iconic_filter').value;
+                    let recHtml = recordedItems.filter(it => (!filter || !it.iconic || it.iconic === filter)).map(it => it.html).join('');
+                    let missHtml = missingItems.filter(it => (!filter || !it.iconic || it.iconic === filter)).map(it => it.html).join('');
+                    let containerRecorded = document.querySelector('.species_list_recorded');
+                    let containerMissing = document.querySelector('.species_list');
+                    containerRecorded.innerHTML = recHtml || '<p>No recorded species for this filter.</p>';
+                    containerMissing.innerHTML = missHtml || '<p>No missing species for this filter.</p>';
+                    // also update clipboard contents (unfiltered)
+                    let container2 = document.querySelector('.clip_board');
+                    container2.innerHTML = html_missing_clipboard;
+
+                    if (inat_username_url) {
+                        document.querySelectorAll('.user-observed').forEach(el => {
+                            const taxonId = Number(el.getAttribute('data-taxon-id'));
+                            if (!userCheckComplete) {
+                                el.innerHTML = "<span class='spinner-border spinner-border-sm text-secondary' style='border-width:0.12em;' role='status' aria-hidden='true'></span>";
+                            } else if (userObservedLocalTaxa.has(taxonId)) {
+                                el.innerHTML = "<i class='bi bi-check-circle-fill text-success' title='Observed locally by " + inat_username_url + "'></i>";
+                            } else if (userObservedTaxa.has(taxonId)) {
+                                el.innerHTML = "<i class='bi bi-check-circle text-success' title='Observed globally by " + inat_username_url + "'></i>";
+                            } else {
+                                el.innerHTML = "<i class='bi bi-x-circle text-muted' title='Not yet observed by " + inat_username_url + "'></i>";
+                            }
+                        });
+                    }
+                }
+
+                async function updateUserObservedStatuses() {
+                    if (!inat_username_url) return;
+
+                    bar.style.width = "85%";
+                    bar.innerHTML = "Checking your observations";
+
+                    // First check for local observations within inner radius
+                    const allTaxonIds = [...species_id_local_array, ...missingItems.map(item => item.taxon_id)];
+                    if (allTaxonIds.length > 0) {
+                        const localObsUrl = 'https://api.inaturalist.org/v1/observations/species_counts?user_id=' + encodeURIComponent(inat_username_url) + '&lat=' + lat + '&lng=' + lng + '&radius=' + i_rad + '&taxon_id=' + allTaxonIds.join(',') + '&per_page=500&verifiable=true&rank=species';
+                        try {
+                            const response = await fetch(localObsUrl);
+                            const localObsData = await response.json();
+                            if (localObsData && localObsData.results) {
+                                localObsData.results.forEach(result => {
+                                    if (result.taxon && result.taxon.id) {
+                                        userObservedLocalTaxa.add(result.taxon.id);
+                                    }
+                                });
+                            }
+                        } catch (error) {
+                            console.log(error);
+                        }
+                    }
+
+                    if (species_id_local_array.length > 0) {
+                        const recordedSpeciesUrl = 'https://api.inaturalist.org/v1/observations/species_counts?user_id=' + encodeURIComponent(inat_username_url) + '&taxon_id=' + species_id_local_array.join(',') + '&per_page=500&verifiable=true&rank=species';
+                        try {
+                            const response = await fetch(recordedSpeciesUrl);
+                            const recordedSpeciesData = await response.json();
+                            if (recordedSpeciesData && recordedSpeciesData.results) {
+                                recordedSpeciesData.results.forEach(result => {
+                                    if (result.taxon && result.taxon.id) {
+                                        userObservedTaxa.add(result.taxon.id);
+                                    }
+                                });
+                            }
+                        } catch (error) {
+                            console.log(error);
+                        }
+                    }
+
+                    if (missingItems.length > 0) {
+                        const missingTaxonIds = missingItems.map(item => item.taxon_id);
+                        const chunkSize = 100;
+                        for (let start = 0; start < missingTaxonIds.length; start += chunkSize) {
+                            const chunk = missingTaxonIds.slice(start, start + chunkSize);
+                            const userSpeciesUrl = 'https://api.inaturalist.org/v1/observations/species_counts?user_id=' + encodeURIComponent(inat_username_url) + '&taxon_id=' + chunk.join(',') + '&per_page=200&verifiable=true&rank=species';
+                            try {
+                                const response = await fetch(userSpeciesUrl);
+                                const userSpeciesData = await response.json();
+                                if (userSpeciesData && userSpeciesData.results) {
+                                    userSpeciesData.results.forEach(result => {
+                                        if (result.taxon && result.taxon.id) {
+                                            userObservedTaxa.add(result.taxon.id);
+                                        }
+                                    });
+                                }
+                            } catch (error) {
+                                console.log(error);
+                            }
+                        }
+                    }
+
+                    userCheckComplete = true;
+                    renderFilteredLists();
+
+                    bar.style.width = "100%";
+                    bar.innerHTML = "Let's go!";
+
+                    // hide the progress bar after user checks complete
+                    setTimeout(function(){
+                        var progressbar = document.getElementById("progbar");
+                        progressbar.style.opacity = '0';
+                    }, 500);
+                }
+
+                // initial render using populated arrays
+                renderFilteredLists();
+
+                // query user observations after lists are visible, then update ticks
+                updateUserObservedStatuses();
+
+                // wire up onchange to re-render
+                document.getElementById('iconic_filter').onchange = renderFilteredLists;
+
+                // rendering handled by renderFilteredLists(); do not overwrite here
 
                 // undisable the copy list button
                 document.querySelector('#copylistbutton').disabled = false;
-                bar.style.width = "100%";
-                bar.innerHTML = "Let's go!";
+                // finish loading immediately when no username-based checks are required
+                if (!inat_username_url) {
+                    bar.style.width = "100%";
+                    bar.innerHTML = "Let's go!";
 
-                // hide the progress bar
-                setTimeout(function(){
-                    var progressbar = document.getElementById("progbar");
-                    progressbar.style.opacity = '0';
-                }, 500);
+                    // hide the progress bar
+                    setTimeout(function(){
+                        var progressbar = document.getElementById("progbar");
+                        progressbar.style.opacity = '0';
+                    }, 500);
+                }
                 
             }
             
