@@ -202,7 +202,7 @@
         <br>
         
 
-        <p style="text-align: center">A web thingy by <a href="https://twitter.com/simon_rolph">Simon Rolph</a>. Find the
+        <p style="text-align: center">A biodiversity monitoring decision support tool by <a href="https://bsky.app/profile/simon-rolph.com">Simon Rolph</a>. Find the
             code on <a href="https://github.com/simonrolph/easily_missed">GitHub.</a></p>
 
             <img src="images/powered_by.png" class="img-fluid center">
@@ -463,31 +463,66 @@
                 let sp_count_2 = document.querySelector('.sp_count_2');
                 sp_count_2.innerHTML = species_count.total_results + "<small> (+" + (species_count.total_results - species_count_old.total_results) + ")</small>";
                 let ratio = document.querySelector('.ratio');
-                let ratio_value = (100 * ((species_count_local.total_results / species_count.total_results) - (species_count_local_old.total_results / species_count_old.total_results))).toFixed(2);
-                if (ratio_value > 0) { ratio_value = "+" + ratio_value };
-                ratio.innerHTML = (100 * (species_count_local.total_results / species_count.total_results)).toFixed(2) + "%" +
-                    "<small> (" + ratio_value + ")</small>";
+                let current_ratio = species_count.total_results > 0 ? (100 * (species_count_local.total_results / species_count.total_results)) : 0;
+                let old_ratio = species_count_old.total_results > 0 ? (100 * (species_count_local_old.total_results / species_count_old.total_results)) : 0;
+                let ratio_change = current_ratio - old_ratio;
+                let ratio_change_abs = Math.abs(ratio_change).toFixed(2);
+                let change_indicator = '';
+                if (ratio_change > 0) {
+                    change_indicator = "<span class='text-success'><i class='bi bi-arrow-up'></i> +" + ratio_change_abs + "</span>";
+                } else if (ratio_change < 0) {
+                    change_indicator = "<span class='text-danger'><i class='bi bi-arrow-down'></i> -" + ratio_change_abs + "</span>";
+                } else {
+                    change_indicator = "<span class='text-muted'><i class='bi bi-dash'></i> 0.00</span>";
+                }
+                ratio.innerHTML = current_ratio.toFixed(2) + "%" +
+                    "<small> (" + change_indicator + ")</small>";
                 bar.style.width = "30%";
                 bar.innerHTML = "Getting contributors";
 
                 // Build the contributor tab
+                const localTotal = species_count_local.total_results || 0;
+                const contributorsList = (contributors.results || []).map(contributor => {
+                    const userId = (contributor.user && contributor.user.id) || contributor.user_id;
+                    const name = contributor.user && contributor.user.name ? contributor.user.name.trim() : '';
+                    const login = contributor.user && contributor.user.login ? contributor.user.login : '';
+                    const displayName = name || login || 'Unknown user';
+                    const speciesCount = contributor.species_count || 0;
+                    const percentage = localTotal > 0 ? Math.round(speciesCount / localTotal * 100) : 0;
+                    const iconUrl = (contributor.user && (contributor.user.icon_url || contributor.user.icon)) || '';
+                    return { userId, displayName, speciesCount, percentage, iconUrl };
+                }).sort((a, b) => b.speciesCount - a.speciesCount);
+
+                let htmlTop3 = '';
+                if (contributorsList.length > 0) {
+                    htmlTop3 += '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;">';
+                    contributorsList.slice(0, 3).forEach((contributor, index) => {
+                        const profileStart = contributor.userId ? "<a target='_blank' href='https://www.inaturalist.org/people/" + contributor.userId + "'>" : '<span>';
+                        const profileEnd = contributor.userId ? '</a>' : '</span>';
+                        const avatar = contributor.iconUrl
+                            ? "<img src='" + contributor.iconUrl + "' alt='" + contributor.displayName + " icon' style='width:44px;height:44px;border-radius:50%;margin-right:10px;object-fit:cover;'>"
+                            : "<i class='bi bi-person-circle' style='font-size:2rem;margin-right:10px;line-height:1;'></i>";
+                        htmlTop3 += '<div class="card" style="flex:1 1 220px;min-width:220px;"><div class="card-body" style="padding:16px;">' +
+                            '<div style="font-size:0.85rem;margin-bottom:8px;"><strong>#' + (index + 1) + '</strong></div>' +
+                            '<div style="display:flex;align-items:center;margin-bottom:8px;">' + avatar + '<div>' + profileStart + contributor.displayName + profileEnd + '</div></div>' +
+                            "<div '>" + contributor.speciesCount + ' species (' + contributor.percentage + '%)</div>' +
+                            '</div></div>';
+                    });
+                    htmlTop3 += '</div>';
+                }
+
                 let html_people_list = '';
-                contributors.results.forEach(contributor => {
+                contributorsList.slice(3).forEach(contributor => {
+                    const profileStart = contributor.userId ? "<a target='_blank' href='https://www.inaturalist.org/people/" + contributor.userId + "'>" : '<span>';
+                    const profileEnd = contributor.userId ? '</a>' : '</span>';
                     let htmlSegment = '<div class="card"><div class="card-body">' +
-                        //'<progress value="75" max="100"></progress>' + 
-                        "<a target='_blank' href='https://www.inaturalist.org/people/"+
-                        contributor.user_id+
-                        "'>" + 
-                        contributor.user.login + 
-                        "</a>: " +
-                        contributor.species_count+
-                        ' species ('+
-                        Math.round(contributor.species_count/species_count_local.total_results*100)+
-                        '%)</div></div>';
+                        profileStart + contributor.displayName + profileEnd +
+                        ': ' + contributor.speciesCount +
+                        ' species (' + contributor.percentage + '%)</div></div>';
                     html_people_list += htmlSegment;
                 });
                 let container_people = document.querySelector('.people_list');
-                container_people.innerHTML = html_people_list;
+                container_people.innerHTML = htmlTop3 + html_people_list;
                 bar.style.width = "40%";
                 bar.innerHTML = "Getting list of recorded species";
 
