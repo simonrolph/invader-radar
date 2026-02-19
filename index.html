@@ -164,8 +164,7 @@
         <div class="tab-content" id="species_list2">
             <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
                 <p>Species (and number of records) which have <b>not</b> been within <span class="i_rad_info">1</span>km of where you are, but have been recorded within
-                    <span class="o_rad_info">5</span>km. Record these species to fill local data gaps.
-                    <a href="javascript:;" id="copylistbutton" onclick="copyList()" disabled><i class="bi bi-clipboard"></i> Copy list to clipboard</a></p>
+                    <span class="o_rad_info">5</span>km. Record these species to fill local data gaps.</p>
                 <div class="species_list">
                     <div class="d-flex justify-content-center">
                         <div class="spinner-border" role="status">
@@ -210,9 +209,6 @@
 
     </div>
 
-    <div style="display:none;">
-        <textarea class="clip_board" id="clip_board" rows="4" cols="50" ></textarea>
-    </div>
 
     <script>
         // set up the progress bar
@@ -325,8 +321,9 @@
 
         async function getData(url) {
             try {
-                let res = await fetch(url+ "&verifiable=true&rank=species" + extra_params);
-                console.log("Making request to iNaturalist API:" + url);
+                full_url = url+ "&verifiable=true&rank=species%2Csubspecies" + extra_params;
+                let res = await fetch(full_url);
+                console.log("Making request to iNaturalist API:" + full_url);
                 return await res.json();
             } catch (error) {
                 console.log(error);
@@ -388,7 +385,7 @@
             a.href = 'https://www.inaturalist.org/observations?place_id=any&subview=map&lat=' + lat + '&lng=' + lng + '&radius=' + o_rad + extra_params;
 
             // make the mini map, add tiles etc.
-            let map = L.map('map').setView([lat, lng], 13);
+            let map = L.map('map').setView([lat, lng], 12);
             map.options.maxZoom = 16;
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 16,
@@ -443,6 +440,9 @@
                 // get the number of records for the region and the locality
                 let species_count = await getData('https://api.inaturalist.org/v1/observations/species_counts?lat=' + lat + '&lng=' + lng + '&radius=' + o_rad + "&per_page=0");
                 let species_count_local = await getData('https://api.inaturalist.org/v1/observations/species_counts?lat=' + lat + '&lng=' + lng + '&radius=' + i_rad + "&per_page=0");
+                console.log(species_count);
+                console.log("Species count - Local:", species_count_local.total_results, "Regional:", species_count.total_results);
+
 
                 let today = new Date();
                 let priorDate = new Date(new Date().setDate(today.getDate() - 30)).toISOString().split('T')[0];
@@ -523,6 +523,14 @@
                 });
                 let container_people = document.querySelector('.people_list');
                 container_people.innerHTML = htmlTop3 + html_people_list;
+
+                let localNewSpeciesTaxonIds = [];
+                let newLocalSpeciesSet = new Set();
+                if (species_count_local.total_results > species_count_local_old.total_results) {
+                    localNewSpeciesTaxonIds = await getNewSpeciesTaxonIds(i_rad, "local");
+                    newLocalSpeciesSet = new Set(localNewSpeciesTaxonIds);
+                }
+
                 bar.style.width = "40%";
                 bar.innerHTML = "Getting list of recorded species";
 
@@ -570,8 +578,12 @@
                             userTickPlaceholder = "<span class='user-observed' data-taxon-id='" + specie.taxon.id + "' style='margin-right:6px;'><span class='spinner-border spinner-border-sm text-secondary' style='border-width:0.12em;' role='status' aria-hidden='true'></span></span>";
                         }
 
+                        let isNewLocal = newLocalSpeciesSet.has(specie.taxon.id);
+                        let newBadge = isNewLocal ? "<span class='badge badge-success' style='margin-right:6px;'>New</span>" : "";
+
                         let htmlSegment = '<div class="card"><div class="card-body">' +
                             userTickPlaceholder +
+                            newBadge +
                             thumb +
                             "<em><a target='_blank' href='https://www.inaturalist.org/taxa/" + specie.taxon.id + "'>" + specie.taxon.name + "</a></em>, " + specie.taxon.preferred_common_name + (iconic ? " <small>(" + iconic + ")</small>" : "") + " - <a target='_blank' href=https://www.inaturalist.org/observations?place_id=any&subview=map&lat=" +
                             +lat + '&lng=' + lng + '&radius=' + o_rad + '&taxon_id=' + specie.taxon.id +
@@ -579,7 +591,7 @@
                             specie.count + " " + record_plurality + "</a>" +
                             '</div></div>';
 
-                        recordedItems.push({html: htmlSegment, iconic: iconic, taxon_id: specie.taxon.id});
+                        recordedItems.push({html: htmlSegment, iconic: iconic, taxon_id: specie.taxon.id, isNewLocal: isNewLocal});
                     });
 
                     let container = document.querySelector('.species_list_recorded');
@@ -598,7 +610,6 @@
                 console.log(species);
 
                 let html_missing = '';
-                let html_missing_clipboard = '';
                 
                 species.results.forEach(specie => {
                     if (!(species_local_array.includes(specie.taxon.name))) {
@@ -631,8 +642,6 @@
 
                         missingItems.push({html: htmlSegment, iconic: iconic, taxon_id: specie.taxon.id});
 
-                        let clipboard_segment = specie.taxon.name + "\t" + specie.taxon.preferred_common_name + "\r\n";
-                        html_missing_clipboard += clipboard_segment;
                     }
                 });
 
@@ -647,19 +656,148 @@
                     iconicSelect.appendChild(opt);
                 });
 
+                async function getNewSpeciesTaxonIds(radius, radiusName) {
+                    console.log(radiusName + " species - checking for new species in past 30 days");
+
+                    let newSpeciesTaxonIds = [];
+                    let species_recent_list = await getData('https://api.inaturalist.org/v1/observations/species_counts?lat=' + lat + '&lng=' + lng + '&radius=' + radius + '&d1=' + priorDate + '&per_page=500');
+
+                    console.log(radiusName + " species lists fetched - Recent (past 30 days):", species_recent_list?.results?.length);
+
+                    let recent_taxon_ids = (species_recent_list.results || []).map(s => s.taxon.id);
+
+                    if (recent_taxon_ids.length > 0) {
+                        let species_old_list = await getData('https://api.inaturalist.org/v1/observations/species_counts?lat=' + lat + '&lng=' + lng + '&radius=' + radius + '&d2=' + priorDate + '&taxon_id=' + recent_taxon_ids.join(',') + '&per_page=500');
+
+                        console.log(radiusName + " old (before 30 days):", species_old_list?.results?.length);
+
+                        let old_ids = new Set((species_old_list.results || []).map(s => s.taxon.id));
+                        let new_species = (species_recent_list.results || []).filter(s => !old_ids.has(s.taxon.id));
+                        newSpeciesTaxonIds = new_species.map(s => s.taxon.id);
+
+                        console.log(radiusName + " new species identified:", new_species.length, "IDs:", newSpeciesTaxonIds);
+                    } else {
+                        console.log("No recent " + radiusName + " species to check");
+                    }
+
+                    return newSpeciesTaxonIds;
+                }
+
+                // Helper function to identify and map new species for a given radius
+                async function identifyAndMapNewSpecies(radius, radiusName, markerColor, popupTitle, progressIdent, progressMap, precomputedIds) {
+                    bar.style.width = progressIdent + "%";
+                    bar.innerHTML = "Identifying new " + radiusName + " species";
+                    
+                    let newSpeciesTaxonIds = Array.isArray(precomputedIds) ? precomputedIds : [];
+                    if (!Array.isArray(precomputedIds)) {
+                        newSpeciesTaxonIds = await getNewSpeciesTaxonIds(radius, radiusName);
+                    }
+                    
+                    // Fetch observations for new species and add markers to map
+                    if (newSpeciesTaxonIds.length > 0) {
+                        bar.style.width = progressMap + "%";
+                        bar.innerHTML = "Mapping " + newSpeciesTaxonIds.length + " new " + radiusName + " species";
+                        
+                        // Query observations endpoint with new species IDs (limit to reasonable number)
+                        const maxNewSpecies = 50;
+                        const taxonIdsToMap = newSpeciesTaxonIds.slice(0, maxNewSpecies);
+                        const obsUrl = 'https://api.inaturalist.org/v1/observations?lat=' + lat + '&lng=' + lng + '&radius=' + radius + '&taxon_id=' + taxonIdsToMap.join(',') + '&d1=' + priorDate + '&per_page=200&verifiable=true';
+                        
+                        console.log("Fetching " + radiusName + " observations from:", obsUrl);
+                        
+                        try {
+                            const obsResponse = await fetch(obsUrl);
+                            const obsData = await obsResponse.json();
+                            console.log(radiusName + " observations API response:", obsData?.total_results, "results", obsData?.results?.length);
+                            
+                            // Add markers for each observation
+                            if (obsData && obsData.results && obsData.results.length > 0) {
+                                let markersAdded = 0;
+                                obsData.results.forEach(obs => {
+                                    if (obs.geojson && obs.geojson.coordinates && obs.geojson.coordinates.length >= 2) {
+                                        const obsLng = obs.geojson.coordinates[0];
+                                        const obsLat = obs.geojson.coordinates[1];
+                                        const speciesName = (obs.taxon && obs.taxon.preferred_common_name) || (obs.taxon && obs.taxon.name) || 'Unknown species';
+                                        const scientificName = (obs.taxon && obs.taxon.name) || '';
+                                        const observedDate = obs.observed_on_string || obs.observed_on || '';
+                                        
+                                        // Get photo URL - try observation photos first, then taxon default photo
+                                        let photoUrl = null;
+                                        
+                                        if (obs.taxon && obs.taxon.default_photo && obs.taxon.default_photo.square_url) {
+                                            photoUrl = obs.taxon.default_photo.square_url;
+                                        }
+                                        
+                                        // Create icon using photo or fallback to colored circle
+                                        let markerIcon;
+                                        if (photoUrl) {
+                                            markerIcon = L.divIcon({
+                                                className: 'new-species-photo-marker',
+                                                html: '<div style="width:36px;height:36px;border-radius:50%;box-shadow:0 0 6px rgba(0,0,0,0.5);overflow:hidden;background:white;"><img src="' + photoUrl + '" style="width:100%;height:100%;object-fit:cover;"></div>',
+                                                iconSize: [36, 36],
+                                                iconAnchor: [18, 18],
+                                                popupAnchor: [0, -18]
+                                            });
+                                        } else {
+                                            markerIcon = L.divIcon({
+                                                className: 'new-species-marker-' + radiusName,
+                                                html: '<div style="background-color:' + markerColor + ';width:16px;height:16px;border-radius:50%;border:2px solid white;box-shadow:0 0 4px rgba(0,0,0,0.5);"></div>',
+                                                iconSize: [16, 16],
+                                                iconAnchor: [8, 8],
+                                                popupAnchor: [0, -8]
+                                            });
+                                        }
+                                        
+                                        const popupContent = '<strong>' + popupTitle + '</strong><br/>' +
+                                            '<em>' + scientificName + '</em> (' +
+                                            speciesName + ')<br/>' +
+                                            '<small>Observed: ' + observedDate + '</small><br/>' +
+                                            '<a href="https://www.inaturalist.org/observations/' + obs.id + '" target="_blank">View observation</a>';
+                                        
+                                        L.marker([obsLat, obsLng], {icon: markerIcon})
+                                            .addTo(map)
+                                            .bindPopup(popupContent);
+                                        markersAdded++;
+                                    }
+                                });
+                                console.log("Added", markersAdded, "markers to map for new " + radiusName + " species");
+                            } else {
+                                console.log("No " + radiusName + " observations with coordinates found");
+                            }
+                        } catch (error) {
+                            console.log("Error fetching new " + radiusName + " species observations:", error);
+                        }
+                    } else {
+                        console.log("No new " + radiusName + " species to map");
+                    }
+                }
+
+                // Identify newly recorded species in the past 30 days and add map markers
+                console.log("Species count comparison - Local old:", species_count_local_old.total_results, "Local current:", species_count_local.total_results);
+                
+                // Check for new species in outer radius (regional)
+                if (species_count_local.total_results > 0) {
+                    await identifyAndMapNewSpecies(o_rad, "regional", "#ffc107", "First regional observation of this species!", 65, 70);
+                }
+
+                // Check for new species in inner radius (local) if species count has increased
+                if (species_count_local.total_results > species_count_local_old.total_results) {
+                    await identifyAndMapNewSpecies(i_rad, "local", "#28a745", "First local observation of this species!", 73, 78, localNewSpeciesTaxonIds);
+                }
+
                 // helper to render lists filtered by iconic taxon
                 function renderFilteredLists() {
                     const filter = document.getElementById('iconic_filter').value;
-                    let recHtml = recordedItems.filter(it => (!filter || !it.iconic || it.iconic === filter)).map(it => it.html).join('');
+                    let recHtml = recordedItems
+                        .filter(it => (!filter || !it.iconic || it.iconic === filter))
+                        .sort((a, b) => (b.isNewLocal ? 1 : 0) - (a.isNewLocal ? 1 : 0))
+                        .map(it => it.html)
+                        .join('');
                     let missHtml = missingItems.filter(it => (!filter || !it.iconic || it.iconic === filter)).map(it => it.html).join('');
                     let containerRecorded = document.querySelector('.species_list_recorded');
                     let containerMissing = document.querySelector('.species_list');
                     containerRecorded.innerHTML = recHtml || '<p>No recorded species for this filter.</p>';
                     containerMissing.innerHTML = missHtml || '<p>No missing species for this filter.</p>';
-                    // also update clipboard contents (unfiltered)
-                    let container2 = document.querySelector('.clip_board');
-                    container2.innerHTML = html_missing_clipboard;
-
                     if (inat_username_url) {
                         document.querySelectorAll('.user-observed').forEach(el => {
                             const taxonId = Number(el.getAttribute('data-taxon-id'));
@@ -679,7 +817,7 @@
                 async function updateUserObservedStatuses() {
                     if (!inat_username_url) return;
 
-                    bar.style.width = "85%";
+                    bar.style.width = "90%";
                     bar.innerHTML = "Checking your observations";
 
                     // First check for local observations within inner radius
@@ -764,8 +902,6 @@
 
                 // rendering handled by renderFilteredLists(); do not overwrite here
 
-                // undisable the copy list button
-                document.querySelector('#copylistbutton').disabled = false;
                 // finish loading immediately when no username-based checks are required
                 if (!inat_username_url) {
                     bar.style.width = "100%";
@@ -812,26 +948,6 @@
         }
 
     </script>
-
-    <script>
-        // copy to clipboard
-
-        function copyList() {
-            // Get the text field
-            var copyText = document.getElementById("clip_board");
-
-            console.log("Species list copied to clipboard");
-            
-
-            // Select the text field
-            copyText.select();
-
-            // Copy the text inside the text field
-            navigator.clipboard.writeText(copyText.value);
-        }
-    
-    </script>
-
 
     <script>
         // twitter button
