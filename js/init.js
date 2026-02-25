@@ -3,6 +3,15 @@
  * Orchestrates application startup and data loading
  */
 
+function isWithinGbExtent(latitude, longitude) {
+    const minLat = 48.500;
+    const minLng = -13.683;
+    const maxLat = 64.067;
+    const maxLng = 3.858;
+
+    return latitude >= minLat && latitude <= maxLat && longitude >= minLng && longitude <= maxLng;
+}
+
 function initializeApp(position) {
     // Get location
     if (lat_url == null && position) {
@@ -15,6 +24,12 @@ function initializeApp(position) {
         lng = position.coords.longitude;
     } else if (lng_url != null) {
         lng = lng_url;
+    }
+
+    const numericLat = Number(lat);
+    const numericLng = Number(lng);
+    if (Number.isFinite(numericLat) && Number.isFinite(numericLng) && !isWithinGbExtent(numericLat, numericLng)) {
+        alert('You are outside Great Britain. Invasive and horizon-scan features may not be applicable for this location.');
     }
 
     // radii of big and little circles in km

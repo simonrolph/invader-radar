@@ -55,7 +55,7 @@
         <img src="images/OneSTOP final logo-black.svg" width="200px;">
         <h1>Invader Radar</h1>
         <h4>Early warning system for invasive species.</h4>
-        <p><a data-bs-toggle="modal" data-bs-target="#infoModal" href=""><i class="bi bi-info-circle"></i> Getting started</a> -  <a href="#species_lists"> <i class="bi bi-arrow-down-circle"></i> Skip to species lists</a> - <a id="link_to_inat" target="_blank" href=""><i class="bi bi-box-arrow-up-right"></i> Explore area on iNaturalist </a> </p>
+        <p><a data-bs-toggle="modal" data-bs-target="#infoModal" href=""><i class="bi bi-info-circle"></i> About</a> -  <a href="#species_lists"> <i class="bi bi-arrow-down-circle"></i> Skip to species lists</a> - <a id="link_to_inat" target="_blank" href=""><i class="bi bi-box-arrow-up-right"></i> Explore area on iNaturalist </a> </p>
         
         
 
@@ -67,8 +67,10 @@
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Back</button>
                     </div>
                     <div class="modal-body">
-                        <h4>What is "OneSTOP - Invader Radar"?</h4>
-                        <p>"OneSTOP - Invader Radar" is a tool using <a href="https://www.inaturalist.org/" target="_blank">iNaturalist</a> data to identify nearby risks from invasive species.</p>
+                        <h4>What is Invader Radar?</h4>
+                        <p>Invader Radar is a prototype developed within the OneSTOP project, currently using <a href="https://www.inaturalist.org/" target="_blank">iNaturalist</a> data to identify nearby risks from invasive species.</p>
+
+                        <p>It works by using iNaturalist data to look for non-native species which are already detected within a local radius, and then non-native species within a wider radius which may pose a future risk. These species are compared to reference datasets such as GB Invasive lists and information portals (e.g. GB-NNSIP) to determine their potential impact.</p>
 
                         <h4>Data sources</h4>
                         <p><strong>Live data (iNaturalist):</strong> species detections, counts, and map observations are fetched live from the iNaturalist API for your selected location and radii. Results can change as new observations are added to iNaturalist.</p>
@@ -83,8 +85,6 @@
                         <p>For example if you're only interested in birds you could add this the URL <code>?iconic_taxa=Aves</code>. Try it out <a href="?iconic_taxa=Aves">here</a>.</p>
 
                         <h4>Provide feedback</h4>
-                        
-                        <p>This a work in progress so <a target="_blank" href="https://forum.inaturalist.org/t/a-tool-to-help-you-fill-local-data-gaps-easily-missed/37575/">please give feedback on the iNaturalist forum</a>!</p>
 
                         <p>If you use GitHub you can submit issues about bugs or feature requests <a href="https://github.com/simonrolph/easily_missed/issues">here</a>.</p>
                         
@@ -130,11 +130,11 @@
         <div class="row" style="text-align: center;">
             <div class="col-sm">
                 <h3 class="sp_count_1">-</h3>
-                <p>Species recorded within <span class="i_rad_info">1</span>km</p>
+                <p>Non-native species within <span class="i_rad_info">1</span>km</p>
             </div>
             <div class="col-sm">
                 <h3 class="sp_count_2">-</h3>
-                <p>Species recorded within <span class="o_rad_info">5</span>km</p>
+                <p>Non-native species within <span class="o_rad_info">5</span>km</p>
             </div>
             <div class="col-sm">
                 <h3 class="ratio">-</h3>
@@ -163,7 +163,7 @@
         <div class="tab-content" id="species_list2">
             <div class="tab-pane fade" id="home" role="tabpanel" aria-labelledby="home-tab">
                 <p>Species (and number of records) which have <b>not</b> been within <span class="i_rad_info">1</span>km of where you are, but have been recorded within
-                    <span class="o_rad_info">5</span>km. Record these species to fill local data gaps.</p>
+                    <span class="o_rad_info">5</span>km.</p>
                 <div class="species_list">
                     <div class="d-flex justify-content-center">
                         <div class="spinner-border" role="status">
