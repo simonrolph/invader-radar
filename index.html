@@ -17,19 +17,19 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500&family=Open+Sans:wght@400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?&family=Work+Sans:ital,wght@0,100..900;1,100..900&family=Open+Sans:wght@400&display=swap" rel="stylesheet">
 
     <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js" integrity="sha512-BB3hKbKWOc9Ez/TAwyWxNXeoV9c1v6FIeYiBieIWkpLjauysF18NzgR1MBNBXf8/KABdlkX68nAhlwcDFLGPCQ=="
         crossorigin=""></script>
     <script src="https://cdn.jsdelivr.net/gh/Falke-Design/L.Donut@latest/src/L.Donut.js"></script>
 
-    <title>Easily Missed - find data gaps in iNaturalist</title>
+    <title>Invader Radar - OneSTOP</title>
     <link rel="canonical" href="https://simonrolph.github.io/easily_missed/" />
     <link rel="manifest" href="/easily_missed/manifest.webmanifest">
-    <link rel="icon" type="image/x-icon" href="images/favicon.ico">
+    <link rel="icon" type="image/svg" href="https://onestop-project.eu/storage/app/uploads/public/67d/d66/98d/67dd6698d4d01598372526.svg">
 </head>
     <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-7M7ZYNN94M"></script>
+<!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-7M7ZYNN94M"></script>-->
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -42,12 +42,13 @@
 
     <div class="container">
         <div class="progress" id="progbar">
-            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;">Waiting for GPS</div>
+            <div class="progress-bar progress-bar-striped bg-success progress-bar-animated" role="progressbar" style="width: 0%;">Waiting for GPS</div>
         </div>
         <!--<p style="text-align-last: right"><a class="twitter-share-button" href="https://twitter.com/intent/tweet?text=Check%20out%20Easily%20Missed,%20an%20app%20to%20help%20recorders%20identify%20local%20gaps%20in%20species%20records">Tweet</a></p>-->
         <div class="error_message"></div>
-        <h1>"Easily missed"</h1>
-        <h4>Build a more complete picture of the wildlife in your local area</h4>
+        <img src="images/OneSTOP final logo-black.svg" width="200px;">
+        <h1> Invader Radar</h1>
+        <h4>Track. Detect. Protect.</h4>
         <p><a data-bs-toggle="modal" data-bs-target="#infoModal" href=""><i class="bi bi-info-circle"></i> Getting started</a> -  <a href="#species_lists"> <i class="bi bi-arrow-down-circle"></i> Skip to species lists</a> - <a id="link_to_inat" target="_blank" href=""><i class="bi bi-box-arrow-up-right"></i> Explore area on iNaturalist </a> </p>
         
         
@@ -60,15 +61,15 @@
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Back</button>
                     </div>
                     <div class="modal-body">
-                        <h4>What is "Easily Missed"?</h4>
-                        <p>"Easily Missed" is a tool to help <a href="https://www.inaturalist.org/" target="_blank">iNaturalist</a> observers identify local gaps in species records. It make suggestions of what species you should submit observations of to iNaturalist.</p>
+                        <h4>What is "OneSTOP - Invader Radar"?</h4>
+                        <p>"OneSTOP - Invader Radar" is a tool using <a href="https://www.inaturalist.org/" target="_blank">iNaturalist</a> data to identify nearby risks from invasive species.</p>
 
                         <h4>How does it work?</h4>
 
                         <p>Firstly, the tool builds a list of species that have been recorded in your region (by default this is within 5km of where you are). The tool then helps you prioritise species to fill data gaps by determining which of these species haven't been recorded in your local area (by default within 1km). Essentially:
                         </p>
                         <img src="images/diagram.svg" class="img-fluid">
-                        <p>By filling local data gaps you'll boost your area's "doughnut score"; the percentage of species recorded locally compared to the wider region. It's an indicator not a target. The wider region might contain species that can't be found in your local area. The +/- numbers indicate change over the past 30 days.</p>
+                        <p>By filling local data gaps you'll boost your area's "doughnut score"; the percentage of species recorded locally compared to the wider region. It's an indicator not a target. The wider region might contain species that can't be found in your local area. The +/- numbers indicate change over the selected time horizon.</p>
 
                         <h4>Advanced</h4>
 
@@ -134,7 +135,7 @@
             </div>
             <div class="col-sm">
                 <h3 class="ratio">-</h3>
-                <p>Doughnut score</p>
+                <p>Local/Proximity ratio</p>
             </div>
         </div>
 
@@ -142,19 +143,14 @@
 
         <ul class="nav nav-tabs" id="species_lists" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home"
-                    aria-selected="true"><h6>Missing species</h6></button>
+                <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile"
+                    aria-selected="true"><h6>Locally recorded species</h6></button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile"
-                    aria-selected="false"><h6>Recorded species</h6></button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="people-tab" data-bs-toggle="tab" data-bs-target="#people" type="button" role="tab" aria-controls="people"
-                    aria-selected="false"><h6>Contributors</h6></button>
+                <button class="nav-link" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home"
+                    aria-selected="false"><h6>Proximity recorded species</h6></button>
             </li>
         </ul>
-        <div id="username_box" style="margin-bottom:12px;"></div>
         <div style="margin-top:8px;margin-bottom:8px;">
             <label for="iconic_filter">Filter by iconic taxon: </label>
             <select id="iconic_filter">
@@ -162,7 +158,7 @@
             </select>
         </div>
         <div class="tab-content" id="species_list2">
-            <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+            <div class="tab-pane fade" id="home" role="tabpanel" aria-labelledby="home-tab">
                 <p>Species (and number of records) which have <b>not</b> been within <span class="i_rad_info">1</span>km of where you are, but have been recorded within
                     <span class="o_rad_info">5</span>km. Record these species to fill local data gaps.</p>
                 <div class="species_list">
@@ -174,20 +170,9 @@
                 </div>
             </div>
 
-            <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+            <div class="tab-pane fade show active" id="profile" role="tabpanel" aria-labelledby="profile-tab">
                 <p>Species (and number of records) which have been recorded within <span class="i_rad_info">1</span>km of where you are.</p>
                 <div class="species_list_recorded">
-                    <div class="d-flex justify-content-center">
-                        <div class="spinner-border" role="status">
-                            <span class="sr-only">Loading...</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="tab-pane fade" id="people" role="tabpanel" aria-labelledby="profile-tab">
-                <p>Local contributors who have recorded species within <span class="i_rad_info">1</span>km of where you are, and the percentage of the local area's species they recorded.</p>
-                <div class="people_list">
                     <div class="d-flex justify-content-center">
                         <div class="spinner-border" role="status">
                             <span class="sr-only">Loading...</span>
@@ -199,10 +184,6 @@
         </div>
 
         <br>
-        
-
-        <p style="text-align: center">A biodiversity monitoring decision support tool by <a href="https://bsky.app/profile/simon-rolph.com">Simon Rolph</a>. Find the
-            code on <a href="https://github.com/simonrolph/easily_missed">GitHub.</a></p>
 
             <img src="images/powered_by.png" class="img-fluid center">
             <br>
@@ -211,762 +192,44 @@
 
 
     <script>
-        // set up the progress bar
-        var bar = document.getElementsByClassName("progress-bar")[0];
-        bar.style.width = "5%";
-
-        // Setting up the page
-        // get url parameters
-        var urlParams = window.location.search;
-        var inat_username_url = new URLSearchParams(window.location.search).get('inat_username');
-        if (inat_username_url) {
-            console.log("iNaturalist username provided: " + inat_username_url);
-        }
-        
-        // Populate username box
-        var usernameBox = document.getElementById('username_box');
-        if (inat_username_url) {
-            // Show info box with username and icon legend
-            usernameBox.innerHTML = `
-                <div class="alert alert-info" role="alert">
-                    <strong><i class="bi bi-person-circle"></i> Showing observations for: ${inat_username_url}</strong>
-                    <div style="margin-top:8px;">
-                        <span style="margin-right:16px;"><i class="bi bi-check-circle-fill text-success"></i> Observed locally</span>
-                        <span style="margin-right:16px;"><i class="bi bi-check-circle text-success"></i> Observed globally</span>
-                        <span><i class="bi bi-x-circle text-muted"></i> Not observed</span>
-                    </div>
-                </div>
-            `;
-        } else {
-            // Show input box for username
-            usernameBox.innerHTML = `
-                <div class="alert alert-secondary" role="alert">
-                    <strong><i class="bi bi-person-plus"></i> Track your observations</strong>
-                    <div class="input-group" style="margin-top:8px;max-width:400px;">
-                        <input type="text" id="username_input" class="form-control" placeholder="Enter iNaturalist username" aria-label="iNaturalist username" onkeypress="if(event.key==='Enter') addUsername()">
-                        <button class="btn btn-primary" type="button" onclick="addUsername()">Go</button>
-                    </div>
-                </div>
-            `;
-        }
-        
-        function addUsername() {
-            var username = document.getElementById('username_input').value.trim();
-            if (username) {
-                var currentUrl = new URL(window.location.href);
-                currentUrl.searchParams.set('inat_username', username);
-                window.location.href = currentUrl.toString();
-            }
-        }
-        if (urlParams.includes("?")) {
-            console.log(urlParams);
-            var getQuery = urlParams.split('?')[1];
-            var params = getQuery.split('&');
-            console.log("Custom URL parameters supplied:")
-            console.log(params);
-
-            // set variables to for radii and lat/lon
-            if((params.findIndex(params => params.includes("i_rad")))>-1){ // get the inner radius
-                var i_rad_url = params[params.findIndex(params => params.includes("i_rad"))].split("=")[1];
-            }
-            if((params.findIndex(params => params.includes("o_rad")))>-1){ // get the outer radius
-                var o_rad_url = params[params.findIndex(params => params.includes("o_rad"))].split("=")[1];
-            }
-            if((params.findIndex(params => params.includes("lat")))>-1){ // get the lat
-                var lat_url = params[params.findIndex(params => params.includes("lat"))].split("=")[1];
-            }
-            if((params.findIndex(params => params.includes("lng")))>-1){ // get the outer radius
-                var lng_url = params[params.findIndex(params => params.includes("lng"))].split("=")[1];
-            }
-
-            // set the ui values
-            document.getElementById("i_rad").value=i_rad_url;
-            document.getElementById("o_rad").value=o_rad_url;
-
-
-            // remove the protected variables (lat/lng/i_rad/o_rad)
-            // this is quite clunky but it works
-            var to_remove = [];
-            params.forEach(param => {
-                if(param.startsWith("lat") || param.startsWith("lng") || param.startsWith("i_rad") || param.startsWith("o_rad") ){
-                    to_remove.push(param);
-                }
-            });
-            for (var i = to_remove.length -1; i >= 0; i--)
-                params.splice(to_remove[i],1);         
-
-    
-            var extra_params = "&"+params.join("&");
-            console.log(extra_params);
-        } else {
-            console.log("No query paremeters provided");
-            var extra_params = "";
-        }
-
-        
-
-
-        
-        // get geoposition
-        if(lat_url == undefined || lng_url == undefined){
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(getPosition);
-            } else {
-                // This doesn't actually get triggered for some reason
-                alert("GPS needed");
-            }
-        } else {
-            getPosition(null);
-        }
-
-        async function getData(url) {
-            try {
-                full_url = url+ "&verifiable=true&rank=species%2Csubspecies" + extra_params;
-                let res = await fetch(full_url);
-                console.log("Making request to iNaturalist API:" + full_url);
-                return await res.json();
-            } catch (error) {
-                console.log(error);
-            }
-        }
-
-        // Main function for getting and processing data
-        function getPosition(position) {
-
-            // get location
-            if(lat_url == null){
-                var lat = position.coords.latitude;
-            } else{
-                var lat = lat_url
-            }
-            if(lng_url == null){
-                var lng = position.coords.longitude;
-            } else{
-                var lng = lng_url
-            }
-
-            // radii of big and little circles in km
-            if(i_rad_url == null){
-                var i_rad = 1; // default inner radius
-            } else{
-                var i_rad = i_rad_url
-            }
-            if(o_rad_url == null){
-                var o_rad = 5; // default outer radius
-            } else{
-                var o_rad = o_rad_url
-            }
-
-            // fixed number of decimal places 
-            lat = Number(lat).toFixed(6);
-            lng = Number(lng).toFixed(6);
-
-            console.log("latitude: "+lat);
-            console.log("longitude: "+lng);
-
-            console.log("inner radius: "+i_rad);
-            console.log("outer radius: "+o_rad);
-
-            // Update the input controls with the current lat long
-            document.getElementById("lat").value=lat;
-            document.getElementById("lng").value=lng;
-            document.getElementById("i_rad").value=i_rad;
-            document.getElementById("o_rad").value=o_rad;
-
-            document.querySelectorAll('.i_rad_info').forEach(i_rad_in =>{
-                i_rad_in.innerHTML = i_rad;
-            })
-            document.querySelectorAll('.o_rad_info').forEach(o_rad_in =>{
-                o_rad_in.innerHTML = o_rad;
-            })
-
-            // update the link to inat explore
-            var a = document.getElementById('link_to_inat');
-            a.href = 'https://www.inaturalist.org/observations?place_id=any&subview=map&lat=' + lat + '&lng=' + lng + '&radius=' + o_rad + extra_params;
-
-            // make the mini map, add tiles etc.
-            let map = L.map('map').setView([lat, lng], 12);
-            map.options.maxZoom = 16;
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 16,
-                attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap contributors</a>'
-            }).addTo(map);
-
-            // add the donut
-            let donut = L.donut([lat, lng], {
-                radius: o_rad * 1000,
-                innerRadius: i_rad * 1000,
-                innerRadiusAsPercent: false,
-            }).addTo(map);
-
-            // add the ghost donut and make it stay in the centre of the map
-            let donut2 = L.donut([lat, lng], {
-                radius: document.getElementById("o_rad").value * 1000,
-                innerRadius: document.getElementById("i_rad").value * 1000,
-                innerRadiusAsPercent: false,
-                opacity: 0.1
-            }).addTo(map);
-            map.on('move', function(e) {
-                donut2.setLatLng(map.getCenter());
-            });
-
-            // update the radii of the ghost donut based on inputs
-            document.getElementById('i_rad').onchange = function() {
-                donut2.setInnerRadius(document.getElementById("i_rad").value * 1000);
-            };
-            document.getElementById('o_rad').onchange = function() {
-                donut2.setRadius(document.getElementById("o_rad").value * 1000);
-            };
-            
-            // add the central marker
-            var myIcon = L.icon({
-                iconUrl: 'images/location-pin.png',
-                iconSize: [24, 24],
-                iconAnchor: [12, 24],
-            });
-            L.marker([lat, lng], {icon: myIcon}).addTo(map);
-
-            // update the lat long inputs when the map moves
-            map.addEventListener('move', function(ev) {
-                latlng = map.getCenter();
-                document.getElementById('lat').value = latlng.lat;
-                document.getElementById('lng').value = latlng.lng;
-            });
-
-            // main function for rendering data
-            async function renderData() {
-                bar.style.width = "20%";
-                bar.innerHTML = "Getting summary";
-                // get the number of records for the region and the locality
-                let species_count = await getData('https://api.inaturalist.org/v1/observations/species_counts?lat=' + lat + '&lng=' + lng + '&radius=' + o_rad + "&per_page=0");
-                let species_count_local = await getData('https://api.inaturalist.org/v1/observations/species_counts?lat=' + lat + '&lng=' + lng + '&radius=' + i_rad + "&per_page=0");
-                console.log(species_count);
-                console.log("Species count - Local:", species_count_local.total_results, "Regional:", species_count.total_results);
-
-
-                let today = new Date();
-                let priorDate = new Date(new Date().setDate(today.getDate() - 30)).toISOString().split('T')[0];
-                console.log(priorDate);
-                let species_count_old = await getData('https://api.inaturalist.org/v1/observations/species_counts?lat=' + lat + '&lng=' + lng + '&radius=' + o_rad + "&per_page=0" + "&d2=" + priorDate);
-                let species_count_local_old = await getData('https://api.inaturalist.org/v1/observations/species_counts?lat=' + lat + '&lng=' + lng + '&radius=' + i_rad + "&per_page=0" + "&d2=" + priorDate);
-                //console.log(species_count_old);
-
-                // Get the contributors
-                let contributors = await getData('https://api.inaturalist.org/v1/observations/observers?lat=' + lat + '&lng=' + lng + '&radius=' + i_rad);
-                //console.log(contributors); 
-                
-                
-
-                // update the headline figures for species counts
-                let sp_count_1 = document.querySelector('.sp_count_1');
-                sp_count_1.innerHTML = species_count_local.total_results + "<small> (+" + (species_count_local.total_results - species_count_local_old.total_results) + ")</small>";
-                let sp_count_2 = document.querySelector('.sp_count_2');
-                sp_count_2.innerHTML = species_count.total_results + "<small> (+" + (species_count.total_results - species_count_old.total_results) + ")</small>";
-                let ratio = document.querySelector('.ratio');
-                let current_ratio = species_count.total_results > 0 ? (100 * (species_count_local.total_results / species_count.total_results)) : 0;
-                let old_ratio = species_count_old.total_results > 0 ? (100 * (species_count_local_old.total_results / species_count_old.total_results)) : 0;
-                let ratio_change = current_ratio - old_ratio;
-                let ratio_change_abs = Math.abs(ratio_change).toFixed(2);
-                let change_indicator = '';
-                if (ratio_change > 0) {
-                    change_indicator = "<span class='text-success'><i class='bi bi-arrow-up'></i> +" + ratio_change_abs + "</span>";
-                } else if (ratio_change < 0) {
-                    change_indicator = "<span class='text-danger'><i class='bi bi-arrow-down'></i> -" + ratio_change_abs + "</span>";
-                } else {
-                    change_indicator = "<span class='text-muted'><i class='bi bi-dash'></i> 0.00</span>";
-                }
-                ratio.innerHTML = current_ratio.toFixed(2) + "%" +
-                    "<small> (" + change_indicator + ")</small>";
-                bar.style.width = "30%";
-                bar.innerHTML = "Getting contributors";
-
-                // Build the contributor tab
-                const localTotal = species_count_local.total_results || 0;
-                const contributorsList = (contributors.results || []).map(contributor => {
-                    const userId = (contributor.user && contributor.user.id) || contributor.user_id;
-                    const name = contributor.user && contributor.user.name ? contributor.user.name.trim() : '';
-                    const login = contributor.user && contributor.user.login ? contributor.user.login : '';
-                    const displayName = name || login || 'Unknown user';
-                    const speciesCount = contributor.species_count || 0;
-                    const percentage = localTotal > 0 ? Math.round(speciesCount / localTotal * 100) : 0;
-                    const iconUrl = (contributor.user && (contributor.user.icon_url || contributor.user.icon)) || '';
-                    return { userId, displayName, speciesCount, percentage, iconUrl };
-                }).sort((a, b) => b.speciesCount - a.speciesCount);
-
-                let htmlTop3 = '';
-                if (contributorsList.length > 0) {
-                    htmlTop3 += '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;">';
-                    contributorsList.slice(0, 3).forEach((contributor, index) => {
-                        const profileStart = contributor.userId ? "<a target='_blank' href='https://www.inaturalist.org/people/" + contributor.userId + "'>" : '<span>';
-                        const profileEnd = contributor.userId ? '</a>' : '</span>';
-                        const avatar = contributor.iconUrl
-                            ? "<img src='" + contributor.iconUrl + "' alt='" + contributor.displayName + " icon' style='width:44px;height:44px;border-radius:50%;margin-right:10px;object-fit:cover;'>"
-                            : "<i class='bi bi-person-circle' style='font-size:2rem;margin-right:10px;line-height:1;'></i>";
-                        htmlTop3 += '<div class="card" style="flex:1 1 220px;min-width:220px;"><div class="card-body" style="padding:16px;">' +
-                            '<div style="font-size:0.85rem;margin-bottom:8px;"><strong>#' + (index + 1) + '</strong></div>' +
-                            '<div style="display:flex;align-items:center;margin-bottom:8px;">' + avatar + '<div>' + profileStart + contributor.displayName + profileEnd + '</div></div>' +
-                            "<div '>" + contributor.speciesCount + ' species (' + contributor.percentage + '%)</div>' +
-                            '</div></div>';
-                    });
-                    htmlTop3 += '</div>';
-                }
-
-                let html_people_list = '';
-                contributorsList.slice(3).forEach(contributor => {
-                    const profileStart = contributor.userId ? "<a target='_blank' href='https://www.inaturalist.org/people/" + contributor.userId + "'>" : '<span>';
-                    const profileEnd = contributor.userId ? '</a>' : '</span>';
-                    let htmlSegment = '<div class="card"><div class="card-body">' +
-                        profileStart + contributor.displayName + profileEnd +
-                        ': ' + contributor.speciesCount +
-                        ' species (' + contributor.percentage + '%)</div></div>';
-                    html_people_list += htmlSegment;
-                });
-                let container_people = document.querySelector('.people_list');
-                container_people.innerHTML = htmlTop3 + html_people_list;
-
-                let localNewSpeciesTaxonIds = [];
-                let newLocalSpeciesSet = new Set();
-                if (species_count_local.total_results > species_count_local_old.total_results) {
-                    localNewSpeciesTaxonIds = await getNewSpeciesTaxonIds(i_rad, "local");
-                    newLocalSpeciesSet = new Set(localNewSpeciesTaxonIds);
-                }
-
-                bar.style.width = "40%";
-                bar.innerHTML = "Getting list of recorded species";
-
-
-                // initialise create an array of species in the area
-                species_local_array = [];
-                species_id_local_array = [];
-                let userObservedTaxa = new Set();
-                let userObservedLocalTaxa = new Set();
-                let userCheckComplete = !inat_username_url;
-                // containers for rendering and filtering by iconic taxon
-                let recordedItems = [];
-                let missingItems = [];
-                let iconicSet = new Set();
-
-                // how many pages of results do I have to go through?
-                let max_page = Math.floor(species_count_local.total_results / 500) + 1
-                console.log("Gathering species list from this many pages:"+max_page)
-
-
-                // add to the array of species in the area, whilst also building the 'species recorded' tab
-                let html_recorded = '';
-                for (let i = 1; i < (max_page + 1); i++) {
-                    let species_local = await getData('https://api.inaturalist.org/v1/observations/species_counts?lat=' + lat + '&lng=' + lng + '&radius=' + i_rad + '&page=' + i);
-                    //console.log(species_local);
-                    species_local.results.forEach(specie => {
-                        species_local_array.push(specie.taxon.name);
-                        species_id_local_array.push(specie.taxon.id);
-
-                        var record_plurality = "record";
-                        if (specie.count > 1) {
-                            var record_plurality = "records";
-                        }
-
-                        var thumb = "";
-                        if (specie.taxon && specie.taxon.default_photo && specie.taxon.default_photo.square_url) {
-                            thumb = "<img src='" + specie.taxon.default_photo.square_url + "' style='width:36px;height:36px;margin-right:8px;vertical-align:middle;border-radius:4px;'>";
-                        }
-
-                        var iconic = (specie.taxon && specie.taxon.iconic_taxon_name) ? specie.taxon.iconic_taxon_name : "";
-                        if (iconic) iconicSet.add(iconic);
-
-                        let userTickPlaceholder = "";
-                        if (inat_username_url) {
-                            userTickPlaceholder = "<span class='user-observed' data-taxon-id='" + specie.taxon.id + "' style='margin-right:6px;'><span class='spinner-border spinner-border-sm text-secondary' style='border-width:0.12em;' role='status' aria-hidden='true'></span></span>";
-                        }
-
-                        let isNewLocal = newLocalSpeciesSet.has(specie.taxon.id);
-                        let newBadge = isNewLocal ? "<span class='badge badge-success' style='margin-right:6px;'>New</span>" : "";
-
-                        let htmlSegment = '<div class="card"><div class="card-body">' +
-                            userTickPlaceholder +
-                            newBadge +
-                            thumb +
-                            "<em><a target='_blank' href='https://www.inaturalist.org/taxa/" + specie.taxon.id + "'>" + specie.taxon.name + "</a></em>, " + specie.taxon.preferred_common_name + (iconic ? " <small>(" + iconic + ")</small>" : "") + " - <a target='_blank' href=https://www.inaturalist.org/observations?place_id=any&subview=map&lat=" +
-                            +lat + '&lng=' + lng + '&radius=' + o_rad + '&taxon_id=' + specie.taxon.id +
-                            ">" +
-                            specie.count + " " + record_plurality + "</a>" +
-                            '</div></div>';
-
-                        recordedItems.push({html: htmlSegment, iconic: iconic, taxon_id: specie.taxon.id, isNewLocal: isNewLocal});
-                    });
-
-                    let container = document.querySelector('.species_list_recorded');
-                    container.innerHTML = html_recorded;
-
-                    console.log();
-
-                }
-
-                bar.style.width = "60%";
-                bar.innerHTML = "Generating missing species list";
-                //console.log(species_local_array);
-
-                // Species in the big circle
-                let species = await getData('https://api.inaturalist.org/v1/observations/species_counts?lat=' + lat + '&lng=' + lng + '&radius=' + o_rad + "&without_taxon_id=" + species_id_local_array.slice(0, 499).join());
-                console.log(species);
-
-                let html_missing = '';
-                
-                species.results.forEach(specie => {
-                    if (!(species_local_array.includes(specie.taxon.name))) {
-                        var record_plurality = "record";
-                        if (specie.count > 1) {
-                            var record_plurality = "records";
-                        }
-
-                        var thumb = "";
-                        if (specie.taxon && specie.taxon.default_photo && specie.taxon.default_photo.square_url) {
-                            thumb = "<img src='" + specie.taxon.default_photo.square_url + "' style='width:36px;height:36px;margin-right:8px;vertical-align:middle;border-radius:4px;'>";
-                        }
-
-                        var iconic = (specie.taxon && specie.taxon.iconic_taxon_name) ? specie.taxon.iconic_taxon_name : "";
-                        if (iconic) iconicSet.add(iconic);
-
-                        let userTickPlaceholder = "";
-                        if (inat_username_url) {
-                            userTickPlaceholder = "<span class='user-observed' data-taxon-id='" + specie.taxon.id + "' style='margin-right:6px;'><span class='spinner-border spinner-border-sm text-secondary' style='border-width:0.12em;' role='status' aria-hidden='true'></span></span>";
-                        }
-
-                        let htmlSegment = '<div class="card"><div class="card-body">' +
-                            userTickPlaceholder +
-                            thumb +
-                            "<em><a target='_blank' href='https://www.inaturalist.org/taxa/" + specie.taxon.id + "'>" + specie.taxon.name + "</a></em>, " + specie.taxon.preferred_common_name + (iconic ? " <small>(" + iconic + ")</small>" : "") + " - <a target='_blank' href=https://www.inaturalist.org/observations?place_id=any&subview=map&lat=" +
-                            +lat + '&lng=' + lng + '&radius=' + o_rad + '&taxon_id=' + specie.taxon.id +
-                            ">" +
-                            specie.count + " " + record_plurality + "</a>" +
-                            '</div></div>';
-
-                        missingItems.push({html: htmlSegment, iconic: iconic, taxon_id: specie.taxon.id});
-
-                    }
-                });
-
-                // populate the iconic filter dropdown
-                let iconicSelect = document.getElementById('iconic_filter');
-                // remove existing non-default options
-                for (let i = iconicSelect.options.length - 1; i >= 1; i--) iconicSelect.remove(i);
-                Array.from(iconicSet).sort().forEach(ic => {
-                    let opt = document.createElement('option');
-                    opt.value = ic;
-                    opt.text = ic;
-                    iconicSelect.appendChild(opt);
-                });
-
-                async function getNewSpeciesTaxonIds(radius, radiusName) {
-                    console.log(radiusName + " species - checking for new species in past 30 days");
-
-                    let newSpeciesTaxonIds = [];
-                    let species_recent_list = await getData('https://api.inaturalist.org/v1/observations/species_counts?lat=' + lat + '&lng=' + lng + '&radius=' + radius + '&d1=' + priorDate + '&per_page=500');
-
-                    console.log(radiusName + " species lists fetched - Recent (past 30 days):", species_recent_list?.results?.length);
-
-                    let recent_taxon_ids = (species_recent_list.results || []).map(s => s.taxon.id);
-
-                    if (recent_taxon_ids.length > 0) {
-                        let species_old_list = await getData('https://api.inaturalist.org/v1/observations/species_counts?lat=' + lat + '&lng=' + lng + '&radius=' + radius + '&d2=' + priorDate + '&taxon_id=' + recent_taxon_ids.join(',') + '&per_page=500');
-
-                        console.log(radiusName + " old (before 30 days):", species_old_list?.results?.length);
-
-                        let old_ids = new Set((species_old_list.results || []).map(s => s.taxon.id));
-                        let new_species = (species_recent_list.results || []).filter(s => !old_ids.has(s.taxon.id));
-                        newSpeciesTaxonIds = new_species.map(s => s.taxon.id);
-
-                        console.log(radiusName + " new species identified:", new_species.length, "IDs:", newSpeciesTaxonIds);
-                    } else {
-                        console.log("No recent " + radiusName + " species to check");
-                    }
-
-                    return newSpeciesTaxonIds;
-                }
-
-                // Helper function to identify and map new species for a given radius
-                async function identifyAndMapNewSpecies(radius, radiusName, markerColor, popupTitle, progressIdent, progressMap, precomputedIds) {
-                    bar.style.width = progressIdent + "%";
-                    bar.innerHTML = "Identifying new " + radiusName + " species";
-                    
-                    let newSpeciesTaxonIds = Array.isArray(precomputedIds) ? precomputedIds : [];
-                    if (!Array.isArray(precomputedIds)) {
-                        newSpeciesTaxonIds = await getNewSpeciesTaxonIds(radius, radiusName);
-                    }
-                    
-                    // Fetch observations for new species and add markers to map
-                    if (newSpeciesTaxonIds.length > 0) {
-                        bar.style.width = progressMap + "%";
-                        bar.innerHTML = "Mapping " + newSpeciesTaxonIds.length + " new " + radiusName + " species";
-                        
-                        // Query observations endpoint with new species IDs (limit to reasonable number)
-                        const maxNewSpecies = 50;
-                        const taxonIdsToMap = newSpeciesTaxonIds.slice(0, maxNewSpecies);
-                        const obsUrl = 'https://api.inaturalist.org/v1/observations?lat=' + lat + '&lng=' + lng + '&radius=' + radius + '&taxon_id=' + taxonIdsToMap.join(',') + '&d1=' + priorDate + '&per_page=200&verifiable=true';
-                        
-                        console.log("Fetching " + radiusName + " observations from:", obsUrl);
-                        
-                        try {
-                            const obsResponse = await fetch(obsUrl);
-                            const obsData = await obsResponse.json();
-                            console.log(radiusName + " observations API response:", obsData?.total_results, "results", obsData?.results?.length);
-                            
-                            // Add markers for each observation
-                            if (obsData && obsData.results && obsData.results.length > 0) {
-                                let markersAdded = 0;
-                                obsData.results.forEach(obs => {
-                                    if (obs.geojson && obs.geojson.coordinates && obs.geojson.coordinates.length >= 2) {
-                                        const obsLng = obs.geojson.coordinates[0];
-                                        const obsLat = obs.geojson.coordinates[1];
-                                        const speciesName = (obs.taxon && obs.taxon.preferred_common_name) || (obs.taxon && obs.taxon.name) || 'Unknown species';
-                                        const scientificName = (obs.taxon && obs.taxon.name) || '';
-                                        const observedDate = obs.observed_on_string || obs.observed_on || '';
-                                        
-                                        // Get photo URL - try observation photos first, then taxon default photo
-                                        let photoUrl = null;
-                                        
-                                        if (obs.taxon && obs.taxon.default_photo && obs.taxon.default_photo.square_url) {
-                                            photoUrl = obs.taxon.default_photo.square_url;
-                                        }
-                                        
-                                        // Create icon using photo or fallback to colored circle
-                                        let markerIcon;
-                                        if (photoUrl) {
-                                            markerIcon = L.divIcon({
-                                                className: 'new-species-photo-marker',
-                                                html: '<div style="width:36px;height:36px;border-radius:50%;box-shadow:0 0 6px rgba(0,0,0,0.5);overflow:hidden;background:white;"><img src="' + photoUrl + '" style="width:100%;height:100%;object-fit:cover;"></div>',
-                                                iconSize: [36, 36],
-                                                iconAnchor: [18, 18],
-                                                popupAnchor: [0, -18]
-                                            });
-                                        } else {
-                                            markerIcon = L.divIcon({
-                                                className: 'new-species-marker-' + radiusName,
-                                                html: '<div style="background-color:' + markerColor + ';width:16px;height:16px;border-radius:50%;border:2px solid white;box-shadow:0 0 4px rgba(0,0,0,0.5);"></div>',
-                                                iconSize: [16, 16],
-                                                iconAnchor: [8, 8],
-                                                popupAnchor: [0, -8]
-                                            });
-                                        }
-                                        
-                                        const popupContent = '<strong>' + popupTitle + '</strong><br/>' +
-                                            '<em>' + scientificName + '</em> (' +
-                                            speciesName + ')<br/>' +
-                                            '<small>Observed: ' + observedDate + '</small><br/>' +
-                                            '<a href="https://www.inaturalist.org/observations/' + obs.id + '" target="_blank">View observation</a>';
-                                        
-                                        L.marker([obsLat, obsLng], {icon: markerIcon})
-                                            .addTo(map)
-                                            .bindPopup(popupContent);
-                                        markersAdded++;
-                                    }
-                                });
-                                console.log("Added", markersAdded, "markers to map for new " + radiusName + " species");
-                            } else {
-                                console.log("No " + radiusName + " observations with coordinates found");
-                            }
-                        } catch (error) {
-                            console.log("Error fetching new " + radiusName + " species observations:", error);
-                        }
-                    } else {
-                        console.log("No new " + radiusName + " species to map");
-                    }
-                }
-
-                // Identify newly recorded species in the past 30 days and add map markers
-                console.log("Species count comparison - Local old:", species_count_local_old.total_results, "Local current:", species_count_local.total_results);
-                
-                // Check for new species in outer radius (regional)
-                if (species_count_local.total_results > 0) {
-                    await identifyAndMapNewSpecies(o_rad, "regional", "#ffc107", "First regional observation of this species!", 65, 70);
-                }
-
-                // Check for new species in inner radius (local) if species count has increased
-                if (species_count_local.total_results > species_count_local_old.total_results) {
-                    await identifyAndMapNewSpecies(i_rad, "local", "#28a745", "First local observation of this species!", 73, 78, localNewSpeciesTaxonIds);
-                }
-
-                // helper to render lists filtered by iconic taxon
-                function renderFilteredLists() {
-                    const filter = document.getElementById('iconic_filter').value;
-                    let recHtml = recordedItems
-                        .filter(it => (!filter || !it.iconic || it.iconic === filter))
-                        .sort((a, b) => (b.isNewLocal ? 1 : 0) - (a.isNewLocal ? 1 : 0))
-                        .map(it => it.html)
-                        .join('');
-                    let missHtml = missingItems.filter(it => (!filter || !it.iconic || it.iconic === filter)).map(it => it.html).join('');
-                    let containerRecorded = document.querySelector('.species_list_recorded');
-                    let containerMissing = document.querySelector('.species_list');
-                    containerRecorded.innerHTML = recHtml || '<p>No recorded species for this filter.</p>';
-                    containerMissing.innerHTML = missHtml || '<p>No missing species for this filter.</p>';
-                    if (inat_username_url) {
-                        document.querySelectorAll('.user-observed').forEach(el => {
-                            const taxonId = Number(el.getAttribute('data-taxon-id'));
-                            if (!userCheckComplete) {
-                                el.innerHTML = "<span class='spinner-border spinner-border-sm text-secondary' style='border-width:0.12em;' role='status' aria-hidden='true'></span>";
-                            } else if (userObservedLocalTaxa.has(taxonId)) {
-                                el.innerHTML = "<i class='bi bi-check-circle-fill text-success' title='Observed locally by " + inat_username_url + "'></i>";
-                            } else if (userObservedTaxa.has(taxonId)) {
-                                el.innerHTML = "<i class='bi bi-check-circle text-success' title='Observed globally by " + inat_username_url + "'></i>";
-                            } else {
-                                el.innerHTML = "<i class='bi bi-x-circle text-muted' title='Not yet observed by " + inat_username_url + "'></i>";
-                            }
-                        });
-                    }
-                }
-
-                async function updateUserObservedStatuses() {
-                    if (!inat_username_url) return;
-
-                    bar.style.width = "90%";
-                    bar.innerHTML = "Checking your observations";
-
-                    // First check for local observations within inner radius
-                    const allTaxonIds = [...species_id_local_array, ...missingItems.map(item => item.taxon_id)];
-                    if (allTaxonIds.length > 0) {
-                        const localObsUrl = 'https://api.inaturalist.org/v1/observations/species_counts?user_id=' + encodeURIComponent(inat_username_url) + '&lat=' + lat + '&lng=' + lng + '&radius=' + i_rad + '&taxon_id=' + allTaxonIds.join(',') + '&per_page=500&verifiable=true&rank=species';
-                        try {
-                            const response = await fetch(localObsUrl);
-                            const localObsData = await response.json();
-                            if (localObsData && localObsData.results) {
-                                localObsData.results.forEach(result => {
-                                    if (result.taxon && result.taxon.id) {
-                                        userObservedLocalTaxa.add(result.taxon.id);
-                                    }
-                                });
-                            }
-                        } catch (error) {
-                            console.log(error);
-                        }
-                    }
-
-                    if (species_id_local_array.length > 0) {
-                        const recordedSpeciesUrl = 'https://api.inaturalist.org/v1/observations/species_counts?user_id=' + encodeURIComponent(inat_username_url) + '&taxon_id=' + species_id_local_array.join(',') + '&per_page=500&verifiable=true&rank=species';
-                        try {
-                            const response = await fetch(recordedSpeciesUrl);
-                            const recordedSpeciesData = await response.json();
-                            if (recordedSpeciesData && recordedSpeciesData.results) {
-                                recordedSpeciesData.results.forEach(result => {
-                                    if (result.taxon && result.taxon.id) {
-                                        userObservedTaxa.add(result.taxon.id);
-                                    }
-                                });
-                            }
-                        } catch (error) {
-                            console.log(error);
-                        }
-                    }
-
-                    if (missingItems.length > 0) {
-                        const missingTaxonIds = missingItems.map(item => item.taxon_id);
-                        const chunkSize = 100;
-                        for (let start = 0; start < missingTaxonIds.length; start += chunkSize) {
-                            const chunk = missingTaxonIds.slice(start, start + chunkSize);
-                            const userSpeciesUrl = 'https://api.inaturalist.org/v1/observations/species_counts?user_id=' + encodeURIComponent(inat_username_url) + '&taxon_id=' + chunk.join(',') + '&per_page=200&verifiable=true&rank=species';
-                            try {
-                                const response = await fetch(userSpeciesUrl);
-                                const userSpeciesData = await response.json();
-                                if (userSpeciesData && userSpeciesData.results) {
-                                    userSpeciesData.results.forEach(result => {
-                                        if (result.taxon && result.taxon.id) {
-                                            userObservedTaxa.add(result.taxon.id);
-                                        }
-                                    });
-                                }
-                            } catch (error) {
-                                console.log(error);
-                            }
-                        }
-                    }
-
-                    userCheckComplete = true;
-                    renderFilteredLists();
-
-                    bar.style.width = "100%";
-                    bar.innerHTML = "Let's go!";
-
-                    // hide the progress bar after user checks complete
-                    setTimeout(function(){
-                        var progressbar = document.getElementById("progbar");
-                        progressbar.style.opacity = '0';
-                    }, 500);
-                }
-
-                // initial render using populated arrays
-                renderFilteredLists();
-
-                // query user observations after lists are visible, then update ticks
-                updateUserObservedStatuses();
-
-                // wire up onchange to re-render
-                document.getElementById('iconic_filter').onchange = renderFilteredLists;
-
-                // rendering handled by renderFilteredLists(); do not overwrite here
-
-                // finish loading immediately when no username-based checks are required
-                if (!inat_username_url) {
-                    bar.style.width = "100%";
-                    bar.innerHTML = "Let's go!";
-
-                    // hide the progress bar
-                    setTimeout(function(){
-                        var progressbar = document.getElementById("progbar");
-                        progressbar.style.opacity = '0';
-                    }, 500);
-                }
-                
-            }
-            
-            // this actually triggers the above function
-            renderData();
-
-
-
-            // add all records onto map
-            //L.tileLayer('https://api.inaturalist.org/v1/grid/{z}/{x}/{y}.png?verifiable=true&rank=species&color=blue&lat=' + lat + '&lng=' + lng + '&radius=' + o_rad, {
-            L.tileLayer('https://api.inaturalist.org/v1/grid/{z}/{x}/{y}.png?verifiable=true&rank=species&color=blue'+extra_params,{
-                maxZoom: 19,
-                opacity: 0.3,
-                attribution: 'iNaturalist'
-            }).addTo(map);
-
-            // add user records onto map (this is not implemented yet)
-            //L.tileLayer('https://api.inaturalist.org/v1/grid/{z}/{x}/{y}.png?verifiable=true&rank=species&color=green&lat=' + lat + '&lng=' + lng + '&radius=' + o_rad + "&user_id=" + user_id, {
-            //   maxZoom: 19,
-            //    opacity: 0.3,
-            //    attribution: 'iNaturalist'
-            //}).addTo(map);
-        }
-
-
-        // apply settings to take to new page - used as onClick
-        function applySettings(reset_gps){
-            if(reset_gps){
-                window.location = "?i_rad="+document.getElementById("i_rad").value+"&o_rad="+document.getElementById("o_rad").value +extra_params;
-            } else {
-                window.location = '?lat='+document.getElementById("lat").value+"&lng="+document.getElementById("lng").value+"&i_rad="+document.getElementById("i_rad").value+"&o_rad="+document.getElementById("o_rad").value +extra_params;
-            }
-        }
-
+        // Load external JavaScript modules
     </script>
 
-    <script>
-        // twitter button
-        window.twttr = (function (d, s, id) {
-            var js, fjs = d.getElementsByTagName(s)[0],
-                t = window.twttr || {};
-            if (d.getElementById(id)) return t;
-            js = d.createElement(s);
-            js.id = id;
-            js.src = "https://platform.twitter.com/widgets.js";
-            fjs.parentNode.insertBefore(js, fjs);
+    <!-- Core configuration -->
+    <script src="js/config.js"></script>
 
-            t._e = [];
-            t.ready = function (f) {
-                t._e.push(f);
-            };
+    <!-- Invasive species data -->
+    <script src="js/data_invasive-species.js"></script>
 
-            return t;
-        }(document, "script", "twitter-wjs"));</script>
+    <!-- NNSIP species data -->
+    <script src="js/data_NNSIP.js"></script>
+
+    <!-- 2025 horizon scan species data -->
+    <script src="js/data_horizon_scan_2025.js"></script>
+
+    <!-- 2019 horizon scan species data -->
+    <script src="js/data_horizon_scan_2019.js"></script>
+
+    <!-- API utilities -->
+    <script src="js/api.js"></script>
+
+    <!-- URL parameter handling -->
+    <script src="js/url-params.js"></script>
+
+    <!-- UI utilities -->
+    <script src="js/ui.js"></script>
+
+    <!-- Map utilities -->
+    <script src="js/map.js"></script>
+
+    <!-- Application logic -->
+    <script src="js/app.js"></script>
+
+    <!-- Data processing -->
+    <script src="js/data-processing.js"></script>
+
+    <!-- Initialization -->
+    <script src="js/init.js"></script>
 
 
     
