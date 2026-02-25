@@ -1,49 +1,63 @@
-# Easily Missed - Find Data Gaps in iNaturalist 
+# OneSTOP Invader Radar
 
-![image](https://github.com/simonrolph/easily_missed/assets/17750766/c001c077-f719-4972-a2dc-ec5e208ef44d)
+Invader Radar is a browser app that uses iNaturalist observations to highlight nearby introduced species, including species that match curated invasive and horizon-scan lists.
 
-## Overview
+## What it does
 
-Easily Missed is a web application designed to help iNaturalist observers identify gaps in species records within their local area. By suggesting which species should be observed and reported on iNaturalist, it assists in building a more complete picture of local wildlife.
+- Uses your GPS location (or URL/manual coordinates) to create an inner and outer search radius.
+- Compares species recorded locally (inner radius) vs nearby (outer radius).
+- Shows a local/proximity ratio and recent change indicators.
+- Flags records with badges for:
+	- UK listed invasive species
+	- GB Non-native Species Horizon Scan 2025
+	- GB Non-native Species Horizon Scan 2019 categories
+- Adds optional NNSIP metadata and links for matching species.
+- Supports filtering both species lists by iconic taxon.
 
-## Getting Started
+## Data and API sources
 
-- Visit [Easily Missed](https://simonrolph.github.io/easily_missed/) to access the web app.
-- To understand how to use the app, click on the "Getting started" link on the page.
+- **Live records:** iNaturalist API `observations/species_counts`
+- **Invasive list:** bundled dataset in `js/data_invasive-species.js`
+- **NNSIP species info:** bundled dataset in `js/data_NNSIP.js`
+- **Horizon Scan 2025:** bundled dataset in `js/data_horizon_scan_2025.js`
+- **Horizon Scan 2019:** bundled dataset in `js/data_horizon_scan_2019.js`
 
-## How It Works
+By default, API calls are constrained to:
 
-Easily Missed creates a list of species recorded within your region, typically within 5 kilometers of your location. It helps prioritize species to fill data gaps by identifying species that haven't been recorded in your immediate vicinity, usually within 1 kilometer. Here's how it works:
+- `verifiable=true`
+- `lrank=species`
+- `introduced=true`
 
-1. The tool builds a list of species recorded in your region.
-2. It prioritizes species not recorded in your local area, effectively filling data gaps.
-3. By doing this, you improve your area's "doughnut score," representing the percentage of species recorded locally compared to the wider region.
+## URL parameters
 
-Advanced users can customize the radius of the doughnut and the doughnut hole. Additionally, you can provide parameters in the tool's URL to affect the data retrieved from iNaturalist.
+Reserved parameters used by the app:
 
-## Screenshots
+- `lat` — latitude to center the map.
+- `lng` — longitude to center the map.
+- `i_rad` — inner radius in km.
+- `o_rad` — outer radius in km.
 
-### Map and headline numbers
+Any additional query parameters are passed through to iNaturalist requests. Example:
 
-![image](https://github.com/simonrolph/easily_missed/assets/17750766/c409f593-5e91-4c99-9e4b-fda724b92cb2)
+```text
+?iconic_taxa=Aves
+```
 
-### Species lists
+## Project structure
 
-![image](https://github.com/simonrolph/easily_missed/assets/17750766/213f0459-e0f0-412c-aca1-4e88067a8112)
+- `index.html` — main application page.
+- `styles.css` — app styling.
+- `js/config.js` — global state and configuration.
+- `js/url-params.js` — URL parsing and parameter handling.
+- `js/map.js` — map setup and doughnut controls.
+- `js/api.js` — iNaturalist API utilities.
+- `js/data-processing.js` — core fetch, compare, and render logic.
+- `js/app.js` — list filtering, sorting, and tab badge updates.
+- `js/init.js` — startup orchestration.
+- `sw.js` + `manifest.webmanifest` — PWA/service-worker configuration.
 
-## Advanced Options
-
-You can customize the following options:
-
-- Inner circle radius (km): Adjust the radius of the inner circle.
-- Outer circle radius (km): Modify the radius of the outer circle.
-- Latitude and Longitude: Manually set the location.
-
-## Providing Feedback
-
-Easily Missed is a work in progress, and your feedback is valuable. Please provide feedback on the [iNaturalist forum](https://forum.inaturalist.org/t/a-tool-to-help-you-fill-local-data-gaps-easily-missed/37575/) or submit issues or feature requests on [GitHub](https://github.com/simonrolph/easily_missed/issues).
 
 ## Credits
 
-- **Simon Rolph**: Developer of Easily Missed.
-- Find the source code on [GitHub](https://github.com/simonrolph/easily_missed).
+- Originally created by Simon Rolph.
+- Built around iNaturalist data and UK non-native species datasets.
