@@ -95,3 +95,35 @@ h3{
     border-radius: 0.375rem;
     vertical-align: baseline;
 }
+
+.map-species-filter-control {
+    background: #fff;
+    padding: 8px 10px;
+    border-radius: 4px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    font-size: 12px;
+    line-height: 1.4;
+    min-width: 150px;
+}
+
+.map-species-filter-control .map-filter-title {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.map-species-filter-control label {
+    display: block;
+    margin: 0;
+    font-weight: 400;
+    cursor: pointer;
+}
+
+.map-species-filter-control input[type="checkbox"] {
+    margin-right: 6px;
+}
+
+.map-species-filter-control select {
+    width: 100%;
+    margin-top: 4px;
+    font-size: 12px;
+}

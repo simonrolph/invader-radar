@@ -17,6 +17,7 @@ let lat = null;
 let lng = null;
 let i_rad = null;
 let o_rad = null;
+let invasiveHorizonMarkersLayer = null;
 
 // UI elements
 let bar = null;
@@ -27,6 +28,8 @@ let species_id_local_array = [];
 let recordedItems = [];
 let missingItems = [];
 let iconicSet = new Set();
+let invasiveTaxonIdsToMap = new Set();
+let horizonTaxonIdsToMap = new Set();
 
 // Initialize bar reference
 function initializeConfig() {

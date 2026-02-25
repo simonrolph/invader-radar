@@ -1,30 +1,30 @@
 {
     // Name of the app and short name in case there isn't enough space
-    "name": "Easily Missed",
-    "short_name": "EM",
+    "name": "Invader Radar",
+    "short_name": "Invader Radar",
     // Description what your app is
-    "description": "Build a more complete picture of the wildlife in your local area",
+    "description": "Early warning system for invasive species",
   
     // Scope and start URL - these need to change to yours
-    "scope": "/easily_missed/",
-    "start_url": "/easily_missed/",
+    "scope": "/invader-radar/",
+    "start_url": "/invader-radar/",
   
     // colours of the app as displayed in the installer
-    "background_color": "#FFFAF2",
-    "theme_color": "#3388FF",
+    "background_color": "#f0f0f0",
+    "theme_color": "#329B46",
   
     // Display of the app. 
     //This could be "standalone", "fullscreen", "minimal-ui" or "browser"
-    "display": "standalone", 
+    "display": "standalone" 
     
     // The possible icons to display. Make sure to change the src URL,
     // the type and the size to your needs. If the size isn't correct, 
     // you may not be able to install the app. 
-    "icons": [
-        {
-          "src": "/easily_missed/images/icon_green4.png",
-          "type": "image/png",
-          "sizes": "250x250"
-        }
-    ]
+    //"icons": [
+    //    {
+    //      "src": "/easily_missed/images/icon_green4.png",
+    //      "type": "image/png",
+    //      "sizes": "250x250"
+    //    }
+    //]
   }
