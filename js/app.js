@@ -10,14 +10,23 @@ function renderFilteredLists() {
     const sortByPriority = (a, b) => {
         const aIsInvasive = a.html.includes('badge-danger');
         const bIsInvasive = b.html.includes('badge-danger');
-        const aIsHorizon = a.html.includes('Horizon Scan 2025') || a.html.includes('Horizon Scan 2019');
-        const bIsHorizon = b.html.includes('Horizon Scan 2025') || b.html.includes('Horizon Scan 2019');
+        const aIsHorizon = a.html.includes('Horizon Scan 2025') || a.html.includes('Horizon Scan 2019') || a.html.includes('plantlife-badge-alert');
+        const bIsHorizon = b.html.includes('Horizon Scan 2025') || b.html.includes('Horizon Scan 2019') || b.html.includes('plantlife-badge-alert');
 
         if (aIsInvasive && !bIsInvasive) return -1;
         if (!aIsInvasive && bIsInvasive) return 1;
 
         if (aIsHorizon && !bIsHorizon) return -1;
         if (!aIsHorizon && bIsHorizon) return 1;
+
+        const aPlantlifeRank = typeof a.plantlife2010PriorityRank === 'number' ? a.plantlife2010PriorityRank : 99;
+        const bPlantlifeRank = typeof b.plantlife2010PriorityRank === 'number' ? b.plantlife2010PriorityRank : 99;
+        const aHasPlantlifeAlertRank = aPlantlifeRank < 99;
+        const bHasPlantlifeAlertRank = bPlantlifeRank < 99;
+
+        if (aHasPlantlifeAlertRank && bHasPlantlifeAlertRank && aPlantlifeRank !== bPlantlifeRank) {
+            return aPlantlifeRank - bPlantlifeRank;
+        }
 
         return 0;
     };
@@ -58,7 +67,7 @@ function updateTabBadges(filteredRecordedItems, filteredMissingItems) {
 
     // Count 2025/2019 horizon scan matches in recorded items
     const recordedHorizonCount = filteredRecordedItems.filter(item =>
-        item.html.includes('Horizon Scan 2025') || item.html.includes('Horizon Scan 2019')
+        item.html.includes('Horizon Scan 2025') || item.html.includes('Horizon Scan 2019') || item.html.includes('plantlife-badge-alert')
     ).length;
     
     // Count invasive species in missing items (Proximity recorded species tab)
@@ -68,7 +77,7 @@ function updateTabBadges(filteredRecordedItems, filteredMissingItems) {
 
     // Count 2025/2019 horizon scan matches in missing items
     const missingHorizonCount = filteredMissingItems.filter(item =>
-        item.html.includes('Horizon Scan 2025') || item.html.includes('Horizon Scan 2019')
+        item.html.includes('Horizon Scan 2025') || item.html.includes('Horizon Scan 2019') || item.html.includes('plantlife-badge-alert')
     ).length;
     
     // Update the "Locally recorded species" tab (profile-tab)
@@ -95,9 +104,9 @@ function updateTabBadges(filteredRecordedItems, filteredMissingItems) {
                 horizonBadge.className = 'badge horizon-count-badge';
                 horizonBadge.style.marginLeft = '6px';
                 horizonBadge.style.fontSize = '0.7em';
-                horizonBadge.style.backgroundColor = '#ffc107';
+                horizonBadge.style.backgroundColor = '#ffe7a1';
                 horizonBadge.style.color = '#1E513D';
-                horizonBadge.title = 'Number of species matching Horizon Scan 2025/2019';
+                horizonBadge.title = 'Number of species matching Horizon Scan 2025/2019/2010 (Plantlife)';
                 horizonBadge.textContent = recordedHorizonCount;
                 h6.appendChild(horizonBadge);
             }
@@ -128,9 +137,9 @@ function updateTabBadges(filteredRecordedItems, filteredMissingItems) {
                 horizonBadge.className = 'badge horizon-count-badge';
                 horizonBadge.style.marginLeft = '6px';
                 horizonBadge.style.fontSize = '0.7em';
-                horizonBadge.style.backgroundColor = '#ffc107';
+                horizonBadge.style.backgroundColor = '#ffe7a1';
                 horizonBadge.style.color = '#1E513D';
-                horizonBadge.title = 'Number of species matching Horizon Scan 2025/2019';
+                horizonBadge.title = 'Number of species matching Horizon Scan 2025/2019/2010 (Plantlife)';
                 horizonBadge.textContent = missingHorizonCount;
                 h6.appendChild(horizonBadge);
             }

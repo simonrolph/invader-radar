@@ -6,6 +6,8 @@
 let invasiveSpecies = { invasive_species: [] };
 let invasiveScientificNames = new Set();
 let invasiveCommonNames = new Set();
+let invasiveSpeciesByScientificName = {};
+let invasiveSpeciesByCommonName = {};
 
 function initializeInvasiveSpecies() {
     const invasiveData = {
@@ -80,10 +82,14 @@ function initializeInvasiveSpecies() {
     };
 
     invasiveSpecies = invasiveData;
+    invasiveSpeciesByScientificName = {};
+    invasiveSpeciesByCommonName = {};
     if (invasiveData.invasive_species) {
         invasiveData.invasive_species.forEach(species => {
             invasiveScientificNames.add(species.scientific_name.toLowerCase());
             invasiveCommonNames.add(species.common_name.toLowerCase());
+            invasiveSpeciesByScientificName[species.scientific_name.toLowerCase()] = species;
+            invasiveSpeciesByCommonName[species.common_name.toLowerCase()] = species;
         });
     }
     console.log("Invasive species data initialized:", invasiveScientificNames.size, "scientific names,", invasiveCommonNames.size, "common names");
@@ -100,6 +106,21 @@ function isInvasive(scientificName, commonName) {
     return match;
 }
 
-function getInvasiveBadge() {
+function getInvasiveEntry(scientificName, commonName) {
+    const sci = scientificName ? scientificName.toLowerCase() : '';
+    const com = commonName ? commonName.toLowerCase() : '';
+    return invasiveSpeciesByScientificName[sci] || invasiveSpeciesByCommonName[com] || null;
+}
+
+function getInvasiveUrl(scientificName, commonName) {
+    const entry = getInvasiveEntry(scientificName, commonName);
+    return entry && entry.url ? entry.url : '';
+}
+
+function getInvasiveBadge(url) {
+    const safeUrl = url || '';
+    if (safeUrl) {
+        return "<a class='badge badge-danger' style='margin-right:6px;' title='This species is on the UK invasive species list' target='_blank' rel='noopener noreferrer' href='" + safeUrl + "'>Listed Invasive</a>";
+    }
     return "<span class='badge badge-danger' style='margin-right:6px;' title='This species is on the UK invasive species list'>Listed Invasive</span>";
 }

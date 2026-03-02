@@ -290,13 +290,14 @@ function setInvasiveHorizonObservationMarkers(observations, invasiveTaxonIds, ho
 
         const scientificName = taxon.name || 'Unknown species';
         const commonName = taxon.preferred_common_name || '';
+        const invasiveUrl = getInvasiveUrl(scientificName, commonName);
         const speciesLabel = commonName ? (commonName + ' (' + scientificName + ')') : scientificName;
         const observedOn = observation.observed_on || observation.created_at_details?.date || 'Unknown date';
         const obsUrl = observation.uri || ('https://www.inaturalist.org/observations/' + observation.id);
 
         const badges = [];
         if (isInvasive) {
-            badges.push("<span class='badge badge-danger' style='margin-right:6px;'>Listed Invasive</span>");
+            badges.push(getInvasiveBadge(invasiveUrl));
         }
         if (isHorizon) {
             badges.push("<span class='badge' style='margin-right:6px;background-color:#ffc107;color:#1E513D;'>Horizon Scan</span>");

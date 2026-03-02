@@ -19,6 +19,38 @@ a:active {
     color: #329B46;
 }
 
+a.badge.badge-danger,
+a.badge.badge-danger:visited,
+a.badge.badge-danger:hover,
+a.badge.badge-danger:focus,
+a.badge.badge-danger:active {
+    color: #fff;
+}
+
+a.badge.horizon-badge-link,
+a.badge.horizon-badge-link:visited,
+a.badge.horizon-badge-link:hover,
+a.badge.horizon-badge-link:focus,
+a.badge.horizon-badge-link:active {
+    color: #1E513D;
+}
+
+a.badge.plantlife-badge-default,
+a.badge.plantlife-badge-default:visited,
+a.badge.plantlife-badge-default:hover,
+a.badge.plantlife-badge-default:focus,
+a.badge.plantlife-badge-default:active {
+    color: #ffffff;
+}
+
+a.badge.plantlife-badge-alert,
+a.badge.plantlife-badge-alert:visited,
+a.badge.plantlife-badge-alert:hover,
+a.badge.plantlife-badge-alert:focus,
+a.badge.plantlife-badge-alert:active {
+    color: #1E513D;
+}
+
 .btn-primary {
     background-color: #1E513D;
     border-color: #1E513D;
