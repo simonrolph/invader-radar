@@ -391,6 +391,51 @@ function getSpeciesTagSummary(scientificName, commonName) {
     };
 }
 
+function createSpeciesSourceBadge(sourceLabel) {
+    if (!sourceLabel) {
+        return '';
+    }
+
+    return "<span class='badge badge-light' style='margin-right:6px;' title='Data source'>" + sourceLabel + "</span>";
+}
+
+function createNbnSpeciesListItem(nbnFacetRow) {
+    if (!nbnFacetRow) {
+        return null;
+    }
+
+    const scientificName = (nbnFacetRow.label || '').trim();
+    if (!scientificName) {
+        return null;
+    }
+
+    const count = Number(nbnFacetRow.count) || 0;
+
+    return {
+        count: count,
+        sourceCounts: {
+            nbnAtlas: count
+        },
+        taxon: {
+            id: null,
+            name: scientificName,
+            preferred_common_name: '',
+            iconic_taxon_name: '',
+            default_photo: null
+        }
+    };
+}
+
+function formatSourceRecordPart(count, sourceName) {
+    const numericCount = Number(count) || 0;
+    if (numericCount < 1) {
+        return '';
+    }
+
+    const plurality = numericCount === 1 ? 'record' : 'records';
+    return numericCount + ' ' + plurality + ' on ' + sourceName;
+}
+
 function buildSpeciesListItem(specie) {
     var record_plurality = "record";
     if (specie.count > 1) {
@@ -410,23 +455,46 @@ function buildSpeciesListItem(specie) {
     const taxonId = specie.taxon ? specie.taxon.id : null;
     const tagSummary = getSpeciesTagSummary(scientificName, commonName);
 
-    let mapFilterLink = tagSummary.mapPriority ? getMapFilterLink(taxonId) : "";
-    if (tagSummary.isInvasive) {
+    let mapFilterLink = (tagSummary.mapPriority && taxonId) ? getMapFilterLink(taxonId) : "";
+    if (tagSummary.isInvasive && taxonId) {
         invasiveTaxonIdsToMap.add(taxonId);
     }
-    if (tagSummary.isHorizonPriority) {
+    if (tagSummary.isHorizonPriority && taxonId) {
         horizonTaxonIdsToMap.add(taxonId);
     }
 
     let nnsipInfo = getNnsipInfoHtml(scientificName);
 
+    const commonNameSegment = commonName ? ", " + commonName : "";
+    const iconicSegment = iconic ? " <small>(" + iconic + ")</small>" : "";
+    const scientificNameHtml = taxonId
+        ? "<em><a target='_blank' href='https://www.inaturalist.org/taxa/" + taxonId + "'>" + scientificName + "</a></em>"
+        : "<em>" + scientificName + "</em>";
+    const sourceCounts = specie.sourceCounts || {};
+    const iNaturalistCount = Number(sourceCounts.inaturalist) || 0;
+    const nbnAtlasCount = Number(sourceCounts.nbnAtlas) || 0;
+
+    let iNaturalistHtml = '';
+    if (iNaturalistCount > 0) {
+        const iNaturalistText = formatSourceRecordPart(iNaturalistCount, 'iNaturalist');
+        iNaturalistHtml = taxonId
+            ? "<a target='_blank' href=https://www.inaturalist.org/observations?place_id=any&subview=map&lat=" +
+                +lat + '&lng=' + lng + '&radius=' + o_rad + '&taxon_id=' + taxonId +
+                ">" +
+                iNaturalistText + "</a>"
+            : iNaturalistText;
+    }
+
+    const nbnAtlasText = formatSourceRecordPart(nbnAtlasCount, 'NBN Atlas');
+    const recordParts = [iNaturalistHtml, nbnAtlasText].filter(Boolean);
+    const recordsHtml = recordParts.length > 0
+        ? recordParts.join(' | ')
+        : (specie.count + " " + record_plurality);
+
     let htmlSegment = '<div class="card"><div class="card-body">' +
         thumb +
         tagSummary.badgesHtml +
-        "<em><a target='_blank' href='https://www.inaturalist.org/taxa/" + taxonId + "'>" + scientificName + "</a></em>, " + commonName + (iconic ? " <small>(" + iconic + ")</small>" : "") + " - <a target='_blank' href=https://www.inaturalist.org/observations?place_id=any&subview=map&lat=" +
-        +lat + '&lng=' + lng + '&radius=' + o_rad + '&taxon_id=' + taxonId +
-        ">" +
-        specie.count + " " + record_plurality + "</a> " +
+        scientificNameHtml + commonNameSegment + iconicSegment + " - " + recordsHtml + " " +
         mapFilterLink +
         nnsipInfo +
         '</div></div>';
@@ -434,6 +502,7 @@ function buildSpeciesListItem(specie) {
     return {
         html: htmlSegment,
         iconic: iconic,
+        count: Number(specie.count) || 0,
         taxon_id: taxonId,
         scientificName: scientificName,
         commonName: commonName,
@@ -572,15 +641,72 @@ async function renderData() {
     console.log("Gathering species list from this many pages:" + max_page)
 
     // add to the array of species in the area; UI render happens once data arrays are ready
+    const recordedSpeciesRaw = [];
     for (let i = 1; i < (max_page + 1); i++) {
         let species_local = await getData('https://api.inaturalist.org/v1/observations/species_counts?lat=' + lat + '&lng=' + lng + '&radius=' + i_rad + '&page=' + i);
         species_local.results.forEach(specie => {
             species_local_array.push(specie.taxon.name);
             species_id_local_array.push(specie.taxon.id);
-            const speciesListItem = buildSpeciesListItem(specie);
-            recordedItems.push(speciesListItem);
+            specie.sourceCounts = {
+                inaturalist: Number(specie.count) || 0
+            };
+            specie.count = Number(specie.sourceCounts.inaturalist) || 0;
+            recordedSpeciesRaw.push(specie);
         });
     }
+
+    const recordedByBinomial = new Map();
+    recordedSpeciesRaw.forEach((specie, index) => {
+        const binomial = getBinomialName(specie && specie.taxon ? specie.taxon.name : '');
+        if (binomial) {
+            recordedByBinomial.set(binomial, index);
+        }
+    });
+
+    const nbnSpeciesLocal = await getNbnInvasiveSpeciesByRadius(lat, lng, i_rad);
+    console.log('NBN local invasive species facets:', nbnSpeciesLocal.length);
+
+    let nbnOverlapCount = 0;
+    let nbnAddedCount = 0;
+
+    nbnSpeciesLocal.forEach((nbnRow) => {
+        const nbnSpecie = createNbnSpeciesListItem(nbnRow);
+        if (!nbnSpecie || !nbnSpecie.taxon || !nbnSpecie.taxon.name) {
+            return;
+        }
+
+        const binomial = getBinomialName(nbnSpecie.taxon.name);
+        const hasExisting = recordedByBinomial.has(binomial);
+
+        if (hasExisting) {
+            const existingIndex = recordedByBinomial.get(binomial);
+            const existing = recordedSpeciesRaw[existingIndex];
+            if (existing) {
+                if (!existing.sourceCounts) {
+                    existing.sourceCounts = {};
+                }
+                const nbnIncrement = Number(nbnSpecie.count) || 0;
+                existing.sourceCounts.nbnAtlas = (Number(existing.sourceCounts.nbnAtlas) || 0) + nbnIncrement;
+                existing.count = (Number(existing.sourceCounts.inaturalist) || 0) + (Number(existing.sourceCounts.nbnAtlas) || 0);
+                nbnOverlapCount += 1;
+            }
+            return;
+        }
+
+        recordedByBinomial.set(binomial, recordedSpeciesRaw.length);
+        recordedSpeciesRaw.push(nbnSpecie);
+        nbnAddedCount += 1;
+    });
+
+    console.log('NBN merge summary:', {
+        overlapsWithINaturalist: nbnOverlapCount,
+        addedAsNbnOnly: nbnAddedCount
+    });
+
+    recordedSpeciesRaw.forEach((specie) => {
+        const speciesListItem = buildSpeciesListItem(specie);
+        recordedItems.push(speciesListItem);
+    });
 
     updateProgressBar(60, "Generating missing species list");
 

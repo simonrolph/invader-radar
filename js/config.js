@@ -11,6 +11,12 @@ let lat_url = undefined;
 let lng_url = undefined;
 let extra_params = "";
 
+// NBN Atlas source configuration
+let nbnSourceEnabled = true;
+let nbnAtlasBaseUrl = "https://records-ws.nbnatlas.org/occurrences/search";
+let nbnAtlasFacetField = "scientificName";
+let nbnAtlasQualityProfile = "NBN";
+
 // Map and location
 let map = null;
 let lat = null;

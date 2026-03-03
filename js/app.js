@@ -248,6 +248,17 @@ function renderFilteredLists() {
             return aPlantlifeRank - bPlantlifeRank;
         }
 
+        const aCount = Number(a.count) || 0;
+        const bCount = Number(b.count) || 0;
+        if (aCount !== bCount) {
+            return bCount - aCount;
+        }
+
+        const aName = (a.scientificName || '').toLowerCase();
+        const bName = (b.scientificName || '').toLowerCase();
+        if (aName < bName) return -1;
+        if (aName > bName) return 1;
+
         return 0;
     };
     

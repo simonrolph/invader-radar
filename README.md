@@ -17,6 +17,7 @@ Invader Radar is a browser app that uses iNaturalist observations to highlight n
 ## Data and API sources
 
 - **Live records:** iNaturalist API `observations/species_counts`
+- **Additional live invasive species list:** NBN Atlas Biocache `occurrences/search` with `facets=scientificName`
 - **Invasive list:** bundled dataset in `js/data_invasive-species.js`
 - **NNSIP species info:** bundled dataset in `js/data_NNSIP.js`
 - **Horizon Scan 2025:** bundled dataset in `js/data_horizon_scan_2025.js`
@@ -27,6 +28,20 @@ By default, API calls are constrained to:
 - `verifiable=true`
 - `lrank=species`
 - `introduced=true`
+
+NBN Atlas local species enrichment (recorded list only) uses:
+
+- `q=*:*`
+- `fq=stateInvasive:true`
+- `facets=scientificName`
+- `lat`, `lon`, `radius` (using app center and inner radius)
+
+NBN behaviour is controlled in [js/config.js](js/config.js):
+
+- `nbnSourceEnabled` — turn NBN enrichment on/off.
+- `nbnAtlasBaseUrl` — NBN search endpoint.
+- `nbnAtlasFacetField` — facet field (default `scientificName`).
+- `nbnAtlasQualityProfile` — quality profile (default `NBN`).
 
 ## URL parameters
 
