@@ -51,6 +51,22 @@ a.badge.plantlife-badge-alert:active {
     color: #1E513D;
 }
 
+a.badge.ne2009-badge-default,
+a.badge.ne2009-badge-default:visited,
+a.badge.ne2009-badge-default:hover,
+a.badge.ne2009-badge-default:focus,
+a.badge.ne2009-badge-default:active {
+    color: #ffffff;
+}
+
+a.badge.ne2009-badge-alert,
+a.badge.ne2009-badge-alert:visited,
+a.badge.ne2009-badge-alert:hover,
+a.badge.ne2009-badge-alert:focus,
+a.badge.ne2009-badge-alert:active {
+    color: #1E513D;
+}
+
 .btn-primary {
     background-color: #1E513D;
     border-color: #1E513D;

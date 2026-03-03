@@ -6,6 +6,7 @@
 let horizonScanByBinomial = null;
 let horizonScan2019ByBinomial = null;
 let plantlife2010ByBinomial = null;
+let horizonScan2009NEByBinomial = null;
 
 function getBinomialName(name) {
     if (!name) return '';
@@ -251,6 +252,82 @@ function getPlantlife2010Badge(scientificName) {
     return "<span class='badge' style='" + style + "' title='" + title + "'>" + label + "</span>";
 }
 
+function ensureHorizonScan2009NEIndex() {
+    if (horizonScan2009NEByBinomial !== null) {
+        return;
+    }
+
+    horizonScan2009NEByBinomial = {};
+    if (typeof scanData2009NE === 'undefined' || !scanData2009NE) {
+        return;
+    }
+
+    Object.keys(scanData2009NE).forEach((scientificName) => {
+        const entry = scanData2009NE[scientificName];
+        if (!entry || typeof entry !== 'object') {
+            return;
+        }
+        horizonScan2009NEByBinomial[getBinomialName(scientificName)] = entry;
+    });
+}
+
+function getHorizonScan2009NEEntry(scientificName) {
+    ensureHorizonScan2009NEIndex();
+    if (typeof scanData2009NE === 'undefined' || !scanData2009NE || !scientificName) {
+        return null;
+    }
+
+    let entry = scanData2009NE[scientificName];
+    if (!entry) {
+        entry = horizonScan2009NEByBinomial[getBinomialName(scientificName)];
+    }
+
+    if (!entry || typeof entry !== 'object') {
+        return null;
+    }
+
+    return entry;
+}
+
+function getHorizonScan2009NECategoryRank(scientificName) {
+    const entry = getHorizonScan2009NEEntry(scientificName);
+    if (!entry) {
+        return 99;
+    }
+
+    const category = String(entry.list_category || '').toLowerCase();
+    if (category.includes('black list')) return 0;
+    if (category.includes('alert list')) return 1;
+    if (category.includes('watch list')) return 2;
+    if (category.includes('climate list')) return 3;
+    return 99;
+}
+
+function getHorizonScan2009NEBadge(scientificName) {
+    const entry = getHorizonScan2009NEEntry(scientificName);
+    if (!entry) {
+        return '';
+    }
+
+    const listCategory = entry.list_category || 'Unknown';
+    const environmentalRisk = entry.environmental_risk || 'Unknown';
+    const url = scanData2009NE.url || '';
+    const categoryRank = getHorizonScan2009NECategoryRank(scientificName);
+    const isPriorityCategory = categoryRank < 99;
+    const title = 'Appears in Horizon Scan 2009 (NE) | Category: ' + listCategory + ' | Environmental risk: ' + environmentalRisk;
+    const label = 'Horizon Scan 2009 (NE): ' + listCategory + ' | Risk: ' + environmentalRisk;
+    const style = isPriorityCategory
+        ? "margin-right:6px;background-color:#ffe7a1;color:#1E513D;"
+        : "margin-right:6px;background-color:#6c757d;color:#ffffff;";
+    const badgeClass = isPriorityCategory ? 'ne2009-badge-link ne2009-badge-alert' : 'ne2009-badge-link ne2009-badge-default';
+
+    if (url) {
+        return "<a class='badge " + badgeClass + "' style='" + style + "' title='" + title + "' target='_blank' rel='noopener noreferrer' href='" + url + "'>" + label + "</a>";
+    }
+
+    return "<span class='badge' style='" + style + "' title='" + title + "'>" + label + "</span>";
+}
+
 function getNnsipInfoHtml(scientificName) {
     if (!scientificName || typeof speciesData === 'undefined' || !speciesData[scientificName]) {
         return '';
@@ -278,6 +355,94 @@ function getMapFilterLink(taxonId) {
     }
 
     return "<a href='#map' class='badge badge-light' style='margin-right:6px;' onclick='filterMapToSpecies(\"" + String(taxonId) + "\"); return false;'><i class='bi bi-map'></i></a>";
+}
+
+function getSpeciesTagSummary(scientificName, commonName) {
+    if (typeof evaluateSpeciesTags === 'function') {
+        return evaluateSpeciesTags({
+            scientificName: scientificName,
+            commonName: commonName,
+            scientificBinomial: getBinomialName(scientificName)
+        });
+    }
+
+    const invasiveUrl = getInvasiveUrl(scientificName, commonName);
+    const invasiveBadge = isInvasive(scientificName, commonName) ? getInvasiveBadge(invasiveUrl) : "";
+    const horizonBadge = getHorizonScanBadge(scientificName);
+    const horizon2019Badges = getHorizonScan2019Badges(scientificName);
+    const plantlife2010Badge = getPlantlife2010Badge(scientificName);
+    const horizon2009NEBadge = getHorizonScan2009NEBadge(scientificName);
+    const plantlife2010PriorityRank = getPlantlife2010PriorityRank(scientificName);
+    const horizon2009NECategoryRank = getHorizonScan2009NECategoryRank(scientificName);
+    const hasPlantlife2010AlertPriority = plantlife2010PriorityRank < 99;
+    const hasHorizon2009NEPriorityCategory = horizon2009NECategoryRank < 99;
+    const isHorizonPriority = Boolean(horizonBadge || horizon2019Badges || hasPlantlife2010AlertPriority || hasHorizon2009NEPriorityCategory);
+
+    return {
+        badgesHtml: invasiveBadge + horizonBadge + horizon2019Badges + plantlife2010Badge + horizon2009NEBadge,
+        isInvasive: Boolean(invasiveBadge),
+        isHorizonPriority: isHorizonPriority,
+        mapPriority: Boolean(invasiveBadge || isHorizonPriority),
+        ranks: {
+            plantlife2010PriorityRank: plantlife2010PriorityRank,
+            horizon2009NECategoryRank: horizon2009NECategoryRank
+        },
+        tags: {}
+    };
+}
+
+function buildSpeciesListItem(specie) {
+    var record_plurality = "record";
+    if (specie.count > 1) {
+        record_plurality = "records";
+    }
+
+    var thumb = "";
+    if (specie.taxon && specie.taxon.default_photo && specie.taxon.default_photo.square_url) {
+        thumb = "<img src='" + specie.taxon.default_photo.square_url + "' style='width:36px;height:36px;margin-right:8px;vertical-align:middle;border-radius:4px;'>";
+    }
+
+    var iconic = (specie.taxon && specie.taxon.iconic_taxon_name) ? specie.taxon.iconic_taxon_name : "";
+    if (iconic) iconicSet.add(iconic);
+
+    const scientificName = specie.taxon ? specie.taxon.name : '';
+    const commonName = specie.taxon ? specie.taxon.preferred_common_name : '';
+    const taxonId = specie.taxon ? specie.taxon.id : null;
+    const tagSummary = getSpeciesTagSummary(scientificName, commonName);
+
+    let mapFilterLink = tagSummary.mapPriority ? getMapFilterLink(taxonId) : "";
+    if (tagSummary.isInvasive) {
+        invasiveTaxonIdsToMap.add(taxonId);
+    }
+    if (tagSummary.isHorizonPriority) {
+        horizonTaxonIdsToMap.add(taxonId);
+    }
+
+    let nnsipInfo = getNnsipInfoHtml(scientificName);
+
+    let htmlSegment = '<div class="card"><div class="card-body">' +
+        thumb +
+        tagSummary.badgesHtml +
+        "<em><a target='_blank' href='https://www.inaturalist.org/taxa/" + taxonId + "'>" + scientificName + "</a></em>, " + commonName + (iconic ? " <small>(" + iconic + ")</small>" : "") + " - <a target='_blank' href=https://www.inaturalist.org/observations?place_id=any&subview=map&lat=" +
+        +lat + '&lng=' + lng + '&radius=' + o_rad + '&taxon_id=' + taxonId +
+        ">" +
+        specie.count + " " + record_plurality + "</a> " +
+        mapFilterLink +
+        nnsipInfo +
+        '</div></div>';
+
+    return {
+        html: htmlSegment,
+        iconic: iconic,
+        taxon_id: taxonId,
+        scientificName: scientificName,
+        commonName: commonName,
+        isInvasive: tagSummary.isInvasive,
+        isHorizonPriority: tagSummary.isHorizonPriority,
+        tags: tagSummary.tags,
+        plantlife2010PriorityRank: tagSummary.ranks.plantlife2010PriorityRank,
+        horizon2009NECategoryRank: tagSummary.ranks.horizon2009NECategoryRank
+    };
 }
 
 async function fetchObservationsForTaxonIds(taxonIds, priorDate) {
@@ -389,6 +554,10 @@ async function renderData() {
     ratio.innerHTML = current_ratio.toFixed(2) + "%" + "<small> (" + change_indicator + ")</small>";
     updateProgressBar(30, "Getting list of recorded species");
 
+    if (typeof initializeSpeciesTagRegistry === 'function') {
+        initializeSpeciesTagRegistry();
+    }
+
     // initialise create an array of species in the area
     species_local_array = [];
     species_id_local_array = [];
@@ -402,67 +571,15 @@ async function renderData() {
     let max_page = Math.floor(species_count_local.total_results / 500) + 1
     console.log("Gathering species list from this many pages:" + max_page)
 
-    // add to the array of species in the area, whilst also building the 'species recorded' tab
-    let html_recorded = '';
+    // add to the array of species in the area; UI render happens once data arrays are ready
     for (let i = 1; i < (max_page + 1); i++) {
         let species_local = await getData('https://api.inaturalist.org/v1/observations/species_counts?lat=' + lat + '&lng=' + lng + '&radius=' + i_rad + '&page=' + i);
         species_local.results.forEach(specie => {
             species_local_array.push(specie.taxon.name);
             species_id_local_array.push(specie.taxon.id);
-
-            var record_plurality = "record";
-            if (specie.count > 1) {
-                var record_plurality = "records";
-            }
-
-            var thumb = "";
-            if (specie.taxon && specie.taxon.default_photo && specie.taxon.default_photo.square_url) {
-                thumb = "<img src='" + specie.taxon.default_photo.square_url + "' style='width:36px;height:36px;margin-right:8px;vertical-align:middle;border-radius:4px;'>";
-            }
-
-            var iconic = (specie.taxon && specie.taxon.iconic_taxon_name) ? specie.taxon.iconic_taxon_name : "";
-            if (iconic) iconicSet.add(iconic);
-
-            let invasiveUrl = getInvasiveUrl(specie.taxon.name, specie.taxon.preferred_common_name);
-            let invasiveBadge = isInvasive(specie.taxon.name, specie.taxon.preferred_common_name) ? getInvasiveBadge(invasiveUrl) : "";
-            let horizonBadge = getHorizonScanBadge(specie.taxon.name);
-            let horizon2019Badges = getHorizonScan2019Badges(specie.taxon.name);
-            let plantlife2010Badge = getPlantlife2010Badge(specie.taxon.name);
-            let plantlife2010PriorityRank = getPlantlife2010PriorityRank(specie.taxon.name);
-            let hasPlantlife2010AlertPriority = plantlife2010PriorityRank < 99;
-            let hasMapPriorityBadge = Boolean(invasiveBadge || horizonBadge || horizon2019Badges || hasPlantlife2010AlertPriority);
-            let mapFilterLink = hasMapPriorityBadge ? getMapFilterLink(specie.taxon.id) : "";
-            if (invasiveBadge) {
-                invasiveTaxonIdsToMap.add(specie.taxon.id);
-            }
-            if (horizonBadge || horizon2019Badges || hasPlantlife2010AlertPriority) {
-                horizonTaxonIdsToMap.add(specie.taxon.id);
-            }
-            if (invasiveBadge) {
-                console.log("Adding invasive badge for recorded species:", specie.taxon.preferred_common_name);
-            }
-            let nnsipInfo = getNnsipInfoHtml(specie.taxon.name);
-
-            let htmlSegment = '<div class="card"><div class="card-body">' +
-                thumb +
-                invasiveBadge +
-                horizonBadge +
-                horizon2019Badges +
-                plantlife2010Badge +
-                
-                "<em><a target='_blank' href='https://www.inaturalist.org/taxa/" + specie.taxon.id + "'>" + specie.taxon.name + "</a></em>, " + specie.taxon.preferred_common_name + (iconic ? " <small>(" + iconic + ")</small>" : "") + " - <a target='_blank' href=https://www.inaturalist.org/observations?place_id=any&subview=map&lat=" +
-                +lat + '&lng=' + lng + '&radius=' + o_rad + '&taxon_id=' + specie.taxon.id +
-                ">" +
-                specie.count + " " + record_plurality + "</a> " +
-                mapFilterLink +
-                nnsipInfo +
-                '</div></div>';
-
-            recordedItems.push({ html: htmlSegment, iconic: iconic, taxon_id: specie.taxon.id, plantlife2010PriorityRank: plantlife2010PriorityRank });
+            const speciesListItem = buildSpeciesListItem(specie);
+            recordedItems.push(speciesListItem);
         });
-
-        let container = document.querySelector('.species_list_recorded');
-        container.innerHTML = html_recorded;
     }
 
     updateProgressBar(60, "Generating missing species list");
@@ -471,59 +588,10 @@ async function renderData() {
     let species = await getData('https://api.inaturalist.org/v1/observations/species_counts?lat=' + lat + '&lng=' + lng + '&radius=' + o_rad + "&without_taxon_id=" + species_id_local_array.slice(0, 499).join());
     console.log(species);
 
-    let html_missing = '';
-
     species.results.forEach(specie => {
         if (!(species_local_array.includes(specie.taxon.name))) {
-            var record_plurality = "record";
-            if (specie.count > 1) {
-                var record_plurality = "records";
-            }
-
-            var thumb = "";
-            if (specie.taxon && specie.taxon.default_photo && specie.taxon.default_photo.square_url) {
-                thumb = "<img src='" + specie.taxon.default_photo.square_url + "' style='width:36px;height:36px;margin-right:8px;vertical-align:middle;border-radius:4px;'>";
-            }
-
-            var iconic = (specie.taxon && specie.taxon.iconic_taxon_name) ? specie.taxon.iconic_taxon_name : "";
-            if (iconic) iconicSet.add(iconic);
-
-            let invasiveUrl = getInvasiveUrl(specie.taxon.name, specie.taxon.preferred_common_name);
-            let invasiveBadge = isInvasive(specie.taxon.name, specie.taxon.preferred_common_name) ? getInvasiveBadge(invasiveUrl) : "";
-            let horizonBadge = getHorizonScanBadge(specie.taxon.name);
-            let horizon2019Badges = getHorizonScan2019Badges(specie.taxon.name);
-            let plantlife2010Badge = getPlantlife2010Badge(specie.taxon.name);
-            let plantlife2010PriorityRank = getPlantlife2010PriorityRank(specie.taxon.name);
-            let hasPlantlife2010AlertPriority = plantlife2010PriorityRank < 99;
-            let hasMapPriorityBadge = Boolean(invasiveBadge || horizonBadge || horizon2019Badges || hasPlantlife2010AlertPriority);
-            let mapFilterLink = hasMapPriorityBadge ? getMapFilterLink(specie.taxon.id) : "";
-            if (invasiveBadge) {
-                invasiveTaxonIdsToMap.add(specie.taxon.id);
-            }
-            if (horizonBadge || horizon2019Badges || hasPlantlife2010AlertPriority) {
-                horizonTaxonIdsToMap.add(specie.taxon.id);
-            }
-            if (invasiveBadge && specie.taxon.preferred_common_name.includes('squirrel')) {
-                console.log("Adding invasive badge for missing species:", specie.taxon.preferred_common_name);
-            }
-            let nnsipInfo = getNnsipInfoHtml(specie.taxon.name);
-
-            let htmlSegment = '<div class="card"><div class="card-body">' +
-                thumb +
-                invasiveBadge +
-                horizonBadge +
-                horizon2019Badges +
-                plantlife2010Badge +
-                
-                "<em><a target='_blank' href='https://www.inaturalist.org/taxa/" + specie.taxon.id + "'>" + specie.taxon.name + "</a></em>, " + specie.taxon.preferred_common_name + (iconic ? " <small>(" + iconic + ")</small>" : "") + " - <a target='_blank' href=https://www.inaturalist.org/observations?place_id=any&subview=map&lat=" +
-                +lat + '&lng=' + lng + '&radius=' + o_rad + '&taxon_id=' + specie.taxon.id +
-                ">" +
-                specie.count + " " + record_plurality + "</a> " +
-                mapFilterLink +
-                nnsipInfo +
-                '</div></div>';
-
-            missingItems.push({ html: htmlSegment, iconic: iconic, taxon_id: specie.taxon.id, plantlife2010PriorityRank: plantlife2010PriorityRank });
+            const speciesListItem = buildSpeciesListItem(specie);
+            missingItems.push(speciesListItem);
         }
     });
 

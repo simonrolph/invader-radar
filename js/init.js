@@ -62,6 +62,11 @@ function startApplication() {
     // Initialize invasive species data
     initializeInvasiveSpecies();
 
+    // Initialize species tag registry
+    if (typeof initializeSpeciesTagRegistry === 'function') {
+        initializeSpeciesTagRegistry();
+    }
+
     // Get location and start app
     getLocationFromUrlOrGPS();
 }

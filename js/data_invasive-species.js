@@ -6,8 +6,23 @@
 let invasiveSpecies = { invasive_species: [] };
 let invasiveScientificNames = new Set();
 let invasiveCommonNames = new Set();
+let invasiveBinomialScientificNames = new Set();
 let invasiveSpeciesByScientificName = {};
 let invasiveSpeciesByCommonName = {};
+let invasiveSpeciesByBinomialScientificName = {};
+
+function normalizeInvasiveText(value) {
+    if (!value) return '';
+    return String(value).replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
+function getInvasiveBinomialName(name) {
+    const normalized = normalizeInvasiveText(name);
+    if (!normalized) return '';
+    const parts = normalized.split(' ');
+    if (parts.length < 2) return normalized;
+    return parts[0] + ' ' + parts[1];
+}
 
 function initializeInvasiveSpecies() {
     const invasiveData = {
@@ -82,14 +97,24 @@ function initializeInvasiveSpecies() {
     };
 
     invasiveSpecies = invasiveData;
+    invasiveScientificNames = new Set();
+    invasiveCommonNames = new Set();
+    invasiveBinomialScientificNames = new Set();
     invasiveSpeciesByScientificName = {};
     invasiveSpeciesByCommonName = {};
+    invasiveSpeciesByBinomialScientificName = {};
     if (invasiveData.invasive_species) {
         invasiveData.invasive_species.forEach(species => {
-            invasiveScientificNames.add(species.scientific_name.toLowerCase());
-            invasiveCommonNames.add(species.common_name.toLowerCase());
-            invasiveSpeciesByScientificName[species.scientific_name.toLowerCase()] = species;
-            invasiveSpeciesByCommonName[species.common_name.toLowerCase()] = species;
+            const scientificName = normalizeInvasiveText(species.scientific_name);
+            const commonName = normalizeInvasiveText(species.common_name);
+            const binomialName = getInvasiveBinomialName(species.scientific_name);
+
+            invasiveScientificNames.add(scientificName);
+            invasiveCommonNames.add(commonName);
+            invasiveBinomialScientificNames.add(binomialName);
+            invasiveSpeciesByScientificName[scientificName] = species;
+            invasiveSpeciesByCommonName[commonName] = species;
+            invasiveSpeciesByBinomialScientificName[binomialName] = species;
         });
     }
     console.log("Invasive species data initialized:", invasiveScientificNames.size, "scientific names,", invasiveCommonNames.size, "common names");
@@ -97,19 +122,21 @@ function initializeInvasiveSpecies() {
 
 function isInvasive(scientificName, commonName) {
     if (!scientificName && !commonName) return false;
-    const sci = scientificName ? scientificName.toLowerCase() : '';
-    const com = commonName ? commonName.toLowerCase() : '';
-    const match = invasiveScientificNames.has(sci) || invasiveCommonNames.has(com);
+    const sci = normalizeInvasiveText(scientificName);
+    const sciBinomial = getInvasiveBinomialName(scientificName);
+    const com = normalizeInvasiveText(commonName);
+    const match = invasiveScientificNames.has(sci) || invasiveBinomialScientificNames.has(sciBinomial) || invasiveCommonNames.has(com);
     if (commonName && commonName.includes('squirrel')) {
-        console.log("Checking squirrel:", { scientificName, commonName, sci, com, hasScientific: invasiveScientificNames.has(sci), hasCommon: invasiveCommonNames.has(com), match: match });
+        console.log("Checking squirrel:", { scientificName, commonName, sci, sciBinomial, com, hasScientific: invasiveScientificNames.has(sci), hasBinomial: invasiveBinomialScientificNames.has(sciBinomial), hasCommon: invasiveCommonNames.has(com), match: match });
     }
     return match;
 }
 
 function getInvasiveEntry(scientificName, commonName) {
-    const sci = scientificName ? scientificName.toLowerCase() : '';
-    const com = commonName ? commonName.toLowerCase() : '';
-    return invasiveSpeciesByScientificName[sci] || invasiveSpeciesByCommonName[com] || null;
+    const sci = normalizeInvasiveText(scientificName);
+    const sciBinomial = getInvasiveBinomialName(scientificName);
+    const com = normalizeInvasiveText(commonName);
+    return invasiveSpeciesByScientificName[sci] || invasiveSpeciesByBinomialScientificName[sciBinomial] || invasiveSpeciesByCommonName[com] || null;
 }
 
 function getInvasiveUrl(scientificName, commonName) {
